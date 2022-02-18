@@ -6,6 +6,11 @@
 
 https://github.com/nmtoan91/STExcelToClass.git?path=/Assets/STExcelToClass
 
+## Usuage
+
+1. Select STGame/Excel to Class
+2. Paste table
+
 ## Document
 
 https://github.com/nmtoan91/STExcelToClass/blob/main/Document/st_GameData_doc.pdf

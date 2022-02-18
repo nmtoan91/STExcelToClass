@@ -11,5 +11,5 @@
     "url": "https://github.com/nmtoan91"
   },
   "type": "tool",
-  "description": "Library for extract multiple sprite to seprated sprites"
+  "description": "Library for converting excel table into JSON and/or Unity class"
 }

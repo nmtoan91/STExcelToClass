@@ -6,7 +6,7 @@
 
 https://github.com/nmtoan91/STExcelToClass.git?path=/Assets/STExcelToClass
 
-## Usuage
+## Usage
 
 1. Select STGame/Excel to Class
 2. Paste table

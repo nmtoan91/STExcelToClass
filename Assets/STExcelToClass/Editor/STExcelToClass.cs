@@ -107,6 +107,8 @@ namespace STGAME.STExcelToClass
         {
             
             JSONCLASS();
+
+            Debug.Log("Files are generated in " + textBox3_dir);
         }
         public void JSONCLASS()
         {
@@ -129,6 +131,8 @@ namespace STGAME.STExcelToClass
             Gen_st_hero(str_name_class_object);
             gen_st_json(str_json_name_file, str_name_class_object);
             Gen_st_hero_table(str_name_class_data, str_name_class_object, false);
+
+            Debug.Log("Files are generated in " + textBox3_dir);
             //textBox1 = "";
         }
         private void button3_Click(object sender, EventArgs e)
@@ -145,6 +149,8 @@ namespace STGAME.STExcelToClass
             gen_st_json(str_json_name_file, str_name_class_object);
             Gen_st_hero_table(str_name_class_data, str_name_class_object);
             //textBox1 = "";
+
+            Debug.Log("Files are generated in " + textBox3_dir);
         }
         void InitData()
         {
@@ -194,6 +200,7 @@ namespace STGAME.STExcelToClass
 
             
              textBox3_dir = str_json_path_folder;
+            if(textBox3_dir[textBox3_dir.Length-1] == '/') textBox3_dir = textBox3_dir.Substring(0, textBox3_dir.Length - 1);
             if (!string.IsNullOrEmpty(textBox3_dir))
             {
                 //Debug.Log(textBox3_dir);

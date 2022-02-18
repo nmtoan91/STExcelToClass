@@ -1,6 +1,6 @@
 {
-  "name": "com.stgame.STExcelToJsonClass",
-  "displayName": "STGame: Excel to Json Class",
+  "name": "com.stgame.ExcelToJsonClass",
+  "displayName": "ExcelToJsonClass",
   "version": "0.1.2",
   "unity": "2020.3",
   "license": "MIT",
@@ -11,5 +11,5 @@
     "url": "https://github.com/nmtoan91"
   },
   "type": "tool",
-  "description": "Plugin for extract convert excel table into class and/or json file"
+  "description": "Library for extract multiple sprite to seprated sprites"
 }

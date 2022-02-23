@@ -197,8 +197,8 @@ namespace STGAME.STExcelToClass
 
             trimames();
 
+            str_json_path_folder = str_json_path_folder.Replace('\\', '/');
 
-            
              textBox3_dir = str_json_path_folder;
             if(textBox3_dir[textBox3_dir.Length-1] == '/') textBox3_dir = textBox3_dir.Substring(0, textBox3_dir.Length - 1);
             if (!string.IsNullOrEmpty(textBox3_dir))
@@ -301,7 +301,8 @@ namespace STGAME.STExcelToClass
         }
         public string Gen_st_hero(string classname)
         {
-            string s = "using UnityEngine;\n";
+            string s = "//Author: toanstt \n//This file is generated, do not edit!\n";
+            s += "using UnityEngine;\n";
             s += "using System.Collections;\n";
             s += "using System.Collections.Generic;\n";
             s += "[System.Serializable]";
@@ -342,8 +343,8 @@ namespace STGAME.STExcelToClass
         public string Gen_st_hero_table(string classname, string class1, bool is_gen_data = true)
         {
             // MessageBox.Show(classname + " " + class1);
-
-            string s = "using UnityEngine;\n";
+            string s = "//Author: toanstt \n//This file is generated, do not edit!\n";
+            s += "using UnityEngine;\n";
             s += "using System.Collections;\n";
             s += "using System.Collections.Generic;\n";
             s += "public class " + classname + "  \n{\n";
@@ -435,6 +436,8 @@ namespace STGAME.STExcelToClass
                             for (int k = i; k < i + ARRAY_LENGTH[i]; k++)
                             {
                                 index = k - i;
+                                if (LINE[k] == null || LINE[k].Length == 0)
+                                    break; // break for short array
                                 switch (types[i])
                                 {
                                     case TYPE.FLOAT:
@@ -618,33 +621,35 @@ namespace STGAME.STExcelToClass
                         for (int k = i; k < i + ARRAY_LENGTH[i]; k++)
                         {
                             index = k - i;
+                            if (LINE[k] == null || LINE[k].Length == 0)
+                                break; // break for short array
                             //core here
-                            switch (types[i])
+                            switch (types[k])
                             {
                                 case TYPE.FLOAT:
-                                    if (LINE[i] == null || LINE[i].Length == 0)
+                                    if (LINE[k] == null || LINE[k].Length == 0)
                                         s.Append(textBox_floatdef + ",");
                                     else
-                                        s.Append(LINE[i] + ",");
+                                        s.Append(LINE[k] + ",");
                                     break;
                                 case TYPE.INT:
-                                    if (LINE[i] == null || LINE[i].Length == 0)
+                                    if (LINE[k] == null || LINE[k].Length == 0)
                                         s.Append(textBox_intdef + ",");
                                     else
-                                        s.Append(LINE[i] + ",");
+                                        s.Append(LINE[k] + ",");
                                     break;
                                 case TYPE.STRING:
-                                    s.Append("\"" + LINE[i] + "\",");
+                                    s.Append("\"" + LINE[k] + "\",");
                                     break;
                                 case TYPE.BOOL:
-                                    if (LINE[i] == "1") s.Append("true" + ",");
-                                    else if (LINE[i] == "0") s.Append("false" + ",");
-                                    else if (LINE[i] == "true") s.Append("true" + ",");
-                                    else if (LINE[i] == "false") s.Append("false" + ",");
-                                    else if (LINE[i] == "TRUE") s.Append("true" + ",");
-                                    else if (LINE[i] == "FALSE") s.Append("false" + ",");
-                                    else if (LINE[i] == "") s.Append("false" + ",");
-                                    else if (LINE[i] != "") s.Append("true" + ",");
+                                    if (LINE[k] == "1") s.Append("true" + ",");
+                                    else if (LINE[k] == "0") s.Append("false" + ",");
+                                    else if (LINE[k] == "true") s.Append("true" + ",");
+                                    else if (LINE[k] == "false") s.Append("false" + ",");
+                                    else if (LINE[k] == "TRUE") s.Append("true" + ",");
+                                    else if (LINE[k] == "FALSE") s.Append("false" + ",");
+                                    else if (LINE[k] == "") s.Append("false" + ",");
+                                    else if (LINE[k] != "") s.Append("true" + ",");
                                     else
                                     {
                                         MessageBox.Show("Khi dùng \"is_..\" thì giá trị phải 1 hoặc 0" + ",\n");

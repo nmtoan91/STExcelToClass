@@ -13,9 +13,10 @@ namespace STGAME.STExcelToClass
 
     public class STExcelToClass : EditorWindow
     {
-        string textBox_floatdef;
-        string textBox_intdef;
-        bool is_string_id = false;
+        //string textBox_floatdef;
+        //string textBox_intdef;
+        //bool is_string_id = false;
+        STExcelParameters parameters = new STExcelParameters();
 
         [MenuItem("STGame/Excel to Class")]
         static void Init()
@@ -34,19 +35,19 @@ namespace STGAME.STExcelToClass
             //rootPath = AssetDatabase.GetAssetPath(file);
             //string fullPath = Path.GetFullPath(AssetDatabase.GetAssetPath(file));
 
-            
+
             GUILayout.Label("Source text from Excel", EditorStyles.boldLabel);
             textBox1 = EditorGUILayout.TextArea(textBox1);
 
-            GUILayout.Label("Output Directory", EditorStyles.boldLabel);
+            GUILayout.Label("Output Directory: ", EditorStyles.boldLabel);
             //textBox3_dir = EditorGUILayout.TextField("", textBox3_dir);
             GUILayout.Label(textBox3_dir, EditorStyles.boldLabel);
 
-            GUILayout.Label("Type Definition", EditorStyles.boldLabel);
-            textBox_floatdef = EditorGUILayout.TextField("Float definition", textBox_floatdef);
-            textBox_intdef = EditorGUILayout.TextField("Int Definition", textBox_intdef);
+            //GUILayout.Label("Type Definition", EditorStyles.boldLabel);
+            //textBox_floatdef = EditorGUILayout.TextField("Float definition", textBox_floatdef);
+            //textBox_intdef = EditorGUILayout.TextField("Int Definition", textBox_intdef);
 
-            is_string_id = EditorGUILayout.Toggle("Is String Id", is_string_id);
+            //is_string_id = EditorGUILayout.Toggle("Is String Id", is_string_id);
 
             if (GUILayout.Button("Export Class Only"))
             {
@@ -58,6 +59,30 @@ namespace STGAME.STExcelToClass
             if (GUILayout.Button("Export Class With JSon"))
             {
                 button2_Click(null, null);
+                AssetDatabase.Refresh();
+            }
+            GUILayout.Label("------------------------STGAME---------------------------", EditorStyles.boldLabel);
+            if (GUILayout.Button("Insert sample data"))
+            {
+                string s = "st_level\tst_levelTable\t{\"IsStringId\":false,\"IsGenItemClass\":true,\"JSONName\":\"stLevelJSON\"}\tStData/subFolder\n";
+                s += "id\trow\tcol\tis_boss\tmyarray0\tmyarray1\tmyarray2\ttestfloat\tteststring\tarray0\tarray1\n";
+                s += "0\t4\t4\tTRUE\t23\t1\t1\t2.5\tasd\tstring1\tstrings2\n";
+                s += "1\t\t4\tfalse\t2\t3\t\t\tasd\tstring2\tstrings3\n";
+                s += "2\t\t4\t0\t2\t3\t\t\tasd\tstring3\tstrings4\n";
+                s += "3\t4\t4\t0\t2\t3\t\t2.4\tdf\tstring4\tstrings5\n";
+                s += "4\t4\t\t1\t2\t\t\t1.2\tdsf\tstring5\tstrings6\n";
+                textBox1 = s;
+                AssetDatabase.Refresh();
+            }
+            if (GUILayout.Button("Show all configs"))
+            {
+          string s = "IsStringId     : Force id to string type (default=false)\n";
+                s += "IsGenItemClass : Skip generate item class; generate proto file instead (default=true)\n";
+                s += "JSONName       : Json filename (default=toanstt)\n";
+                s += "defaultFloat   : Default value of float (default=0)\n";
+                s += "defaultInt     : Default value of int (default=0)\n";
+
+                textBox1 = s;
                 AssetDatabase.Refresh();
             }
         }
@@ -92,7 +117,7 @@ namespace STGAME.STExcelToClass
 
         string str_name_class_object;
         string str_name_class_data;
-        string str_json_name_file;
+        //string str_json_name_file;
         string str_json_path_folder;
 
         int iStar = 1;
@@ -103,9 +128,11 @@ namespace STGAME.STExcelToClass
         string[] lines;
         string[] LINE;
         TYPE[] types;
+
+        string []protoKeyworks ={"int32","float","string","bool"};
         private void button1_Click(object sender, EventArgs e)
         {
-            
+
             JSONCLASS();
 
             Debug.Log("Files are generated in " + textBox3_dir);
@@ -129,7 +156,7 @@ namespace STGAME.STExcelToClass
             TryToParseArray();
             LoadFirstData();
             Gen_st_hero(str_name_class_object);
-            gen_st_json(str_json_name_file, str_name_class_object);
+            gen_st_json(parameters.JSONName, str_name_class_object);
             Gen_st_hero_table(str_name_class_data, str_name_class_object, false);
 
             Debug.Log("Files are generated in " + textBox3_dir);
@@ -140,13 +167,10 @@ namespace STGAME.STExcelToClass
             InitData();
             ReadNames();
 
-
-
-
             TryToParseArray();
             LoadFirstData();
             Gen_st_hero(str_name_class_object);
-            gen_st_json(str_json_name_file, str_name_class_object);
+            gen_st_json(parameters.JSONName, str_name_class_object);
             Gen_st_hero_table(str_name_class_data, str_name_class_object);
             //textBox1 = "";
 
@@ -177,7 +201,7 @@ namespace STGAME.STExcelToClass
                     lines[i] = lines[i].Substring(0, lines[i].Length - 1);
                 }
             }
-            
+
         }
         public void ReadNames()
         {
@@ -192,15 +216,29 @@ namespace STGAME.STExcelToClass
 
             str_name_class_object = lines[0].Split('\t')[0];
             str_name_class_data = lines[0].Split('\t')[1];
-            str_json_name_file = lines[0].Split('\t')[2];
+            string str_json_name_file2 = lines[0].Split('\t')[2];
+            //parameters = JsonUtility.FromJson(str_json_name_file, STExcelParameters);
+            try
+            {
+                parameters = JsonUtility.FromJson<STExcelParameters>(str_json_name_file2);
+                //Debug.Log(parameters.IsStringId);
+            } catch (Exception ex)
+            {
+                Debug.Log("Warning: Cannot parse json data, please use this format at cell (C:1): {\"IsStringId\":false,\"IsGenItemClass\":false,\"JSONName\":\"stLevelJSON\"}");
+                parameters.JSONName = str_json_name_file2;
+            }
+            
+
+
+
             str_json_path_folder = lines[0].Split('\t')[3];
 
             trimames();
 
             str_json_path_folder = str_json_path_folder.Replace('\\', '/');
 
-             textBox3_dir = str_json_path_folder;
-            if(textBox3_dir[textBox3_dir.Length-1] == '/') textBox3_dir = textBox3_dir.Substring(0, textBox3_dir.Length - 1);
+            textBox3_dir = str_json_path_folder;
+            if (textBox3_dir[textBox3_dir.Length - 1] == '/') textBox3_dir = textBox3_dir.Substring(0, textBox3_dir.Length - 1);
             if (!string.IsNullOrEmpty(textBox3_dir))
             {
                 //Debug.Log(textBox3_dir);
@@ -211,11 +249,11 @@ namespace STGAME.STExcelToClass
                 string root = "Assets";
                 foreach (string subFolder in subFolders)
                 {
-                    if (!AssetDatabase.IsValidFolder(root +"/"+ subFolder))
+                    if (!AssetDatabase.IsValidFolder(root + "/" + subFolder))
                     {
                         string guid = AssetDatabase.CreateFolder(root, subFolder);
                     }
-                    root += "/"+subFolder ;
+                    root += "/" + subFolder;
                 }
 
             }
@@ -267,7 +305,7 @@ namespace STGAME.STExcelToClass
                     MY_INDEX_IN_MY_ARRAY[i] = -1;
                 }
             }
-
+            
         }
         public void LoadFirstData()
         {
@@ -293,29 +331,29 @@ namespace STGAME.STExcelToClass
                         types[i] = TYPE.STRING;
                     }
                 }
-
                 if (names[i].IndexOf("is_") == 0) { types[i] = TYPE.BOOL; }
                 if (names[i].IndexOf("can_") == 0) { types[i] = TYPE.BOOL; }
+            }
+            if (types[0] == TYPE.STRING)
+            {
+                parameters.IsStringId = true;
+                Debug.Log("Force set id to string because they are strings");
             }
 
         }
         public string Gen_st_hero(string classname)
         {
+            if(!parameters.IsGenItemClass)
+            {
+                return GenProto(classname);
+            }
+
             string s = "//Author: toanstt \n//This file is generated, do not edit!\n";
             s += "using UnityEngine;\n";
             s += "using System.Collections;\n";
             s += "using System.Collections.Generic;\n";
             s += "[System.Serializable]";
             s += "public class " + classname + "  \n{\n";
-            //define variables here
-            //s += "private static " + classname + " _instance;";
-            //define more variable
-
-
-            ////for (int i = 0; i < n; i++)
-            ////{
-            ////    s += "public " + gettext(types[i]) + " " + names[i] + ";\n";
-            ////}
             for (int i = 0; i < n; i++)
             {
                 if (ARRAY_LENGTH[i] > 0)
@@ -327,16 +365,29 @@ namespace STGAME.STExcelToClass
                     s += "public " + gettext(types[i]) + " " + names[i] + ";\n";
             }
 
-
-            //function
-
-            //end
             s += "}\n";
             outputText = s;
             //MessageBox.Show(s);
             string dr = textBox3_dir + "/" + classname + ".cs";
             if (textBox3_dir == null || textBox3_dir == "") dr = classname + ".cs";
             //MessageBox.Show(Path.Combine(Application.dataPath, dr));
+            File.WriteAllText(Path.Combine(Application.dataPath, dr), s);
+            return s;
+        }
+        public string GenProto(string classname)
+        {
+            string s = "Message " + classname + " {\n";
+            for (int i = 0; i < n; i++)
+            {
+                string ss = protoKeyworks[(int)types[i]] + " " + names[i] + " = " + (i + 1) + ";\n";
+                if (ARRAY_LENGTH[i] > 0)
+                    ss = "repeated " + ss;
+                s += ss;
+            }
+            s += "}";
+            Debug.Log(s);
+            string dr = textBox3_dir + "/" + classname + ".proto.txt";
+            if (textBox3_dir == null || textBox3_dir == "") dr = classname + ".proto.txt";
             File.WriteAllText(Path.Combine(Application.dataPath, dr), s);
             return s;
         }
@@ -361,7 +412,7 @@ namespace STGAME.STExcelToClass
             s += "public " + class1 + "[] list;\n";
             //end new for JSON parser
 
-            if (is_string_id)
+            if (parameters.IsStringId)
                 s += "public Dictionary<string, " + class1 + "> VALUE;\n";
             else
                 s += "public Dictionary<int, " + class1 + "> VALUE;\n";
@@ -369,7 +420,7 @@ namespace STGAME.STExcelToClass
             s += "public " + classname + "()\n";
             s += "{\n";
 
-            if (is_string_id)
+            if (parameters.IsStringId)
                 s += "\tVALUE = new Dictionary<string, " + class1 + ">();\n";
             else s += "\tVALUE = new Dictionary<int, " + class1 + ">();\n";
             //new for JSON parser
@@ -393,7 +444,7 @@ namespace STGAME.STExcelToClass
 
             //Get
 
-            if (is_string_id)
+            if (parameters.IsStringId)
             {
                 s += "public " + class1 + " Get(string id)\n";
                 s += "{\n";
@@ -442,13 +493,13 @@ namespace STGAME.STExcelToClass
                                 {
                                     case TYPE.FLOAT:
                                         if (LINE[k] == null || LINE[k].Length == 0)
-                                            s += textBox_floatdef + "f,";
+                                            s += parameters.defaultFloat + "f,";
                                         else
                                             s += LINE[k] + "f,";
                                         break;
                                     case TYPE.INT:
                                         if (LINE[k] == null || LINE[k].Length == 0)
-                                            s += textBox_intdef + ",";
+                                            s += parameters.defaultInt + ",";
                                         else
                                             s += LINE[k] + ",";
                                         break;
@@ -483,13 +534,13 @@ namespace STGAME.STExcelToClass
                             {
                                 case TYPE.FLOAT:
                                     if (LINE[i] == null || LINE[i].Length == 0)
-                                        s += "t." + names[i] + "=" + textBox_floatdef + "f;\n";
+                                        s += "t." + names[i] + "=" + parameters.defaultFloat + "f;\n";
                                     else
                                         s += "t." + names[i] + "=" + LINE[i] + "f;\n";
                                     break;
                                 case TYPE.INT:
                                     if (LINE[i] == null || LINE[i].Length == 0)
-                                        s += "t." + names[i] + "=" + textBox_intdef + ";\n";
+                                        s += "t." + names[i] + "=" + parameters.defaultInt + ";\n";
                                     else
                                         s += "t." + names[i] + "=" + LINE[i] + ";\n";
                                     break;
@@ -520,7 +571,7 @@ namespace STGAME.STExcelToClass
                         MessageBox.Show("ban ko ton tai id");
                     }
 
-                    if (is_string_id)
+                    if (parameters.IsStringId)
                         s += "VALUE.Add(\"" + current_id + "\", t);\n";
                     else
                         s += "VALUE.Add(" + current_id + ", t);\n";
@@ -529,7 +580,7 @@ namespace STGAME.STExcelToClass
             //function
 
 
-            if (is_string_id)
+            if (parameters.IsStringId)
             {
                 s += "public static " + class1 + " get" + class1 + "ByID(string id)";
                 s += "{";
@@ -557,7 +608,7 @@ namespace STGAME.STExcelToClass
 
             return s;
         }
-        public string gettext(TYPE type)
+        string gettext(TYPE type)
         {
             switch (type)
             {
@@ -577,7 +628,7 @@ namespace STGAME.STExcelToClass
             return "flllloat";
         }
 
-        public string getStringValueByType(TYPE type, string value)
+        string getStringValueByType(TYPE type, string value)
         {
             if (type == TYPE.FLOAT || type == TYPE.INT)
             {
@@ -586,7 +637,7 @@ namespace STGAME.STExcelToClass
             else return "\"" + value + "\"";
         }
 
-        public string getStringToJSONAsType(TYPE type)
+        string getStringToJSONAsType(TYPE type)
         {
             if (type == TYPE.INT) return ".AsInt";
             else if (type == TYPE.FLOAT) return ".AsFloat";
@@ -628,13 +679,13 @@ namespace STGAME.STExcelToClass
                             {
                                 case TYPE.FLOAT:
                                     if (LINE[k] == null || LINE[k].Length == 0)
-                                        s.Append(textBox_floatdef + ",");
+                                        s.Append(parameters.defaultFloat + ",");
                                     else
                                         s.Append(LINE[k] + ",");
                                     break;
                                 case TYPE.INT:
                                     if (LINE[k] == null || LINE[k].Length == 0)
-                                        s.Append(textBox_intdef + ",");
+                                        s.Append(parameters.defaultInt + ",");
                                     else
                                         s.Append(LINE[k] + ",");
                                     break;
@@ -669,13 +720,13 @@ namespace STGAME.STExcelToClass
                         {
                             case TYPE.FLOAT:
                                 if (LINE[i] == null || LINE[i].Length == 0)
-                                    s.Append("\"" + names[i] + "\":" + textBox_floatdef + ",\n");
+                                    s.Append("\"" + names[i] + "\":" + parameters.defaultFloat + ",\n");
                                 else
                                     s.Append("\"" + names[i] + "\":" + LINE[i] + ",\n");
                                 break;
                             case TYPE.INT:
                                 if (LINE[i] == null || LINE[i].Length == 0)
-                                    s.Append("\"" + names[i] + "\":" + textBox_intdef + ",\n");
+                                    s.Append("\"" + names[i] + "\":" + parameters.defaultInt + ",\n");
                                 else
                                     s.Append("\"" + names[i] + "\":" + LINE[i] + ",\n");
                                 break;
@@ -789,12 +840,23 @@ namespace STGAME.STExcelToClass
 
     }
 
-    public enum TYPE
+    enum TYPE
     {
         INT = 0,
         FLOAT = 1,
         STRING = 2,
         BOOL = 3
+    }
+    
+    
+    [Serializable]
+    class STExcelParameters
+    {
+        public bool IsStringId = false;
+        public bool IsGenItemClass = true;
+        public string JSONName = "toanstt";
+        public float defaultFloat = 0;
+        public int defaultInt = 0;
     }
 }
 #endif

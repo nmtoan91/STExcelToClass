@@ -524,7 +524,8 @@ namespace STGAME.STExcelToClass
                                         break;
                                 }
                             }
-                            s = s.Substring(0, s.Length - 1);
+                            if(ARRAY_LENGTH.Length>0) 
+                                s = s.Substring(0, s.Length - 1);
                             s += "};\n";
                             i += ARRAY_LENGTH[i] - 1;
                         }

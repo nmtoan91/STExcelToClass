@@ -485,8 +485,8 @@ namespace STGAME.STExcelToClass
                         if (ARRAY_LENGTH[i] > 0)
                         {
                             s += "t." + names[i] + "= new " + gettext(types[i]) + "[]{";
-                            int index = 0;
-                            for (int k = i; k < i + ARRAY_LENGTH[i]; k++)
+                            int index = 0; int k;
+                            for (k = i; k < i + ARRAY_LENGTH[i]; k++)
                             {
                                 index = k - i;
                                 if (LINE[k] == null || LINE[k].Length == 0)
@@ -524,7 +524,7 @@ namespace STGAME.STExcelToClass
                                         break;
                                 }
                             }
-                            if(ARRAY_LENGTH.Length>0) 
+                            if(k>i) 
                                 s = s.Substring(0, s.Length - 1);
                             s += "};\n";
                             i += ARRAY_LENGTH[i] - 1;

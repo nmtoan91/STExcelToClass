@@ -64,7 +64,7 @@ namespace STGAME.STExcelToClass
             GUILayout.Label("------------------------STGAME---------------------------", EditorStyles.boldLabel);
             if (GUILayout.Button("Insert sample data"))
             {
-                string s = "st_level\tst_levelTable\t{\"IsStringId\":false,\"IsGenItemClass\":true,\"JSONName\":\"stLevelJSON\"}\tStData/subFolder\n";
+                string s = "st_level\tst_levelTable\t{\"IsStringId\":false,\"IsGenItemClass\":true,\"JSONName\":\"st_levelJSON\"}\tStData/subFolder\n";
                 s += "id\trow\tcol\tis_boss\tmyarray0\tmyarray1\tmyarray2\ttestfloat\tteststring\tarray0\tarray1\n";
                 s += "0\t4\t4\tTRUE\t23\t1\t1\t2.5\tasd\tstring1\tstrings2\n";
                 s += "1\t\t4\tfalse\t2\t3\t\t\tasd\tstring2\tstrings3\n";
@@ -333,6 +333,8 @@ namespace STGAME.STExcelToClass
                 }
                 if (names[i].IndexOf("is_") == 0) { types[i] = TYPE.BOOL; }
                 if (names[i].IndexOf("can_") == 0) { types[i] = TYPE.BOOL; }
+                if (names[i].IndexOf("Is") == 0) { types[i] = TYPE.BOOL; }
+                if (names[i].IndexOf("Can") == 0) { types[i] = TYPE.BOOL; }
             }
             if (types[0] == TYPE.STRING)
             {

@@ -36,19 +36,18 @@ namespace STGAME.STExcelToClass
             //string fullPath = Path.GetFullPath(AssetDatabase.GetAssetPath(file));
 
 
-            GUILayout.Label("Source text from Excel", EditorStyles.boldLabel);
-            textBox1 = EditorGUILayout.TextArea(textBox1);
 
+            GUILayout.BeginHorizontal("box");
             GUILayout.Label("Output Directory: ", EditorStyles.boldLabel);
             //textBox3_dir = EditorGUILayout.TextField("", textBox3_dir);
             GUILayout.Label(textBox3_dir, EditorStyles.boldLabel);
-
+            GUILayout.EndHorizontal();
             //GUILayout.Label("Type Definition", EditorStyles.boldLabel);
             //textBox_floatdef = EditorGUILayout.TextField("Float definition", textBox_floatdef);
             //textBox_intdef = EditorGUILayout.TextField("Int Definition", textBox_intdef);
 
             //is_string_id = EditorGUILayout.Toggle("Is String Id", is_string_id);
-
+            GUILayout.BeginHorizontal("box");
             if (GUILayout.Button("Export Class Only"))
             {
                 button1_Click(null, null);
@@ -61,7 +60,9 @@ namespace STGAME.STExcelToClass
                 button2_Click(null, null);
                 AssetDatabase.Refresh();
             }
+            GUILayout.EndHorizontal();
             GUILayout.Label("------------------------STGAME---------------------------", EditorStyles.boldLabel);
+            GUILayout.BeginHorizontal("box");
             if (GUILayout.Button("Insert sample data"))
             {
                 string s = "st_level\tst_levelTable\t{\"IsStringId\":false,\"IsGenItemClass\":true,\"JSONName\":\"st_levelJSON\"}\tStData/subFolder\n";
@@ -85,6 +86,9 @@ namespace STGAME.STExcelToClass
                 textBox1 = s;
                 AssetDatabase.Refresh();
             }
+            GUILayout.EndHorizontal();
+            GUILayout.Label("Source text from Excel", EditorStyles.boldLabel);
+            textBox1 = EditorGUILayout.TextArea(textBox1);
         }
         [Multiline]
         public string textBox1;

@@ -70,7 +70,7 @@ namespace STGAME.STExcelToClass
             GUILayout.BeginHorizontal("box");
             if (GUILayout.Button("Insert sample data"))
             {
-                string s = "st_level\tst_levelTable\t{\"IsStringId\":false,\"IsGenItemClass\":true,\"JSONName\":\"st_levelJSON\"}\tStData/subFolder\n";
+                string s = "st_level\tst_levelTable\t{\"IsStringId\":false,\"IsGenItemClass\":true,\"JSONName\":\"st_levelJSON\"}\n";
                 s += "id\trow\tcol\tis_boss\tmyarray0\tmyarray1\tmyarray2\tstring:testforcestring\tteststring\tarray0\tarray1\n";
                 s += "0\t4\t4\tTRUE\t23\t1\t1\t2.5\tasd\tstring1\tstrings2\n";
                 s += "1\t\t4\tfalse\t2\t3\t\t\tasd\tstring2\tstrings3\n";

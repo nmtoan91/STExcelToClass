@@ -354,8 +354,14 @@ namespace STGAME.STExcelToClass
                 if (names[i].IndexOf("Can") == 0) { types[i] = TYPE.BOOL; }
 
                 string[] separateLabel = names[i].Split(':');
-                if (separateLabel.Length == 2)
+                if (separateLabel.Length >= 2)
                 {
+                    if(separateLabel.Length==3) // put a dummy variableName on top
+                    {
+                        separateLabel[0] = separateLabel[1];
+                        separateLabel[1] = separateLabel[2];
+                    }
+
                     names[i] = separateLabel[1];
                     if (separateLabel[0].Equals("int") || separateLabel[1].Equals("Int")) types[i] = TYPE.INT;
                     else if (separateLabel[0].Equals("float") || separateLabel[0].Equals("Float")) types[i] = TYPE.FLOAT;

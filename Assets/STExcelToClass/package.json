@@ -1,7 +1,7 @@
 {
   "name": "com.stgame.exceltojsonclass",
   "displayName": "STGAME: Excel To Json Class",
-  "version": "2.5.0",
+  "version": "3.0.0",
   "unity": "2021.3",
   "license": "MIT",
   "dependencies": {
@@ -11,5 +11,5 @@
     "url": "https://github.com/nmtoan91"
   },
   "type": "tool",
-  "description": "Library for converting excel table into JSON and/or Unity class: https://github.com/nmtoan91"
+  "description": "Library for converting excel table into JSON and/or Unity class: https://github.com/nmtoan91\n IsGenEnum      : Is Generate all enums (default=false)"
 }

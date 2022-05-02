@@ -1,4 +1,5 @@
-//Author : toanstt 
+//Author : toanstt
+//Git: https://github.com/nmtoan91
 //UI: Hoang Anh Nguyen
 #if UNITY_EDITOR
 using System;
@@ -87,6 +88,8 @@ namespace STGAME.STExcelToClass
                 s += "defaultFloat   : Default value of float (default=0)\n";
                 s += "defaultInt     : Default value of int (default=0)\n";
                 s += "type:varname   : Force set variable type, type = {int,float,string,bool} \n";
+                s += "IsGenEnum      : Is Generate all enums (default=false) \n";
+
                 textBox1 = s;
                 AssetDatabase.Refresh();
             }
@@ -135,6 +138,9 @@ namespace STGAME.STExcelToClass
         string[] lines;
         string[] LINE;
         TYPE[] types;
+        string[] typesNames;
+        Dictionary<string, List<string>>  typesDictionraries;
+
 
         string[] protoKeyworks = { "int32", "float", "string", "bool" };
         private void button1_Click(object sender, EventArgs e)
@@ -319,6 +325,8 @@ namespace STGAME.STExcelToClass
         {
             LINE = lines[iStar + 1].Split('\t');
             types = new TYPE[n];
+            typesNames = new string[n];
+            typesDictionraries = new Dictionary<string, List<string>>();
             for (int i = 0; i < n; i++)
             {
                 try
@@ -352,6 +360,11 @@ namespace STGAME.STExcelToClass
                     else if (separateLabel[0].Equals("float") || separateLabel[0].Equals("Float")) types[i] = TYPE.FLOAT;
                     else if (separateLabel[0].Equals("bool") || separateLabel[0].Equals("Bool") || separateLabel[0].Equals("Boolean")) types[i] = TYPE.BOOL;
                     else if (separateLabel[0].Equals("string") || separateLabel[0].Equals("String")) types[i] = TYPE.STRING;
+                    else
+                    {
+                        types[i] = TYPE.ENUM;
+                        typesNames[i] = separateLabel[0]; 
+                    }
                 }
 
             }
@@ -359,6 +372,16 @@ namespace STGAME.STExcelToClass
             {
                 parameters.IsStringId = true;
                 Debug.Log("Force set id to string because they are strings");
+            }
+            for (int i = 0; i < n; i++)
+            {
+                switch (types[i])
+                {
+                    case TYPE.INT: typesNames[i] = "int"; break;    
+                    case TYPE.FLOAT: typesNames[i] = "float"; break;
+                    case TYPE.STRING : typesNames[i] = "string"; break;
+                    case TYPE.BOOL : typesNames[i] = "bool"; break;
+                }
             }
 
         }
@@ -379,11 +402,11 @@ namespace STGAME.STExcelToClass
             {
                 if (ARRAY_LENGTH[i] > 0)
                 {
-                    s += "public " + gettext(types[i]) + "[] " + names[i] + ";// length=" + ARRAY_LENGTH[i] + "\n";
+                    s += "public " + gettext(types[i],i) + "[] " + names[i] + ";// length=" + ARRAY_LENGTH[i] + "\n";
                     i += ARRAY_LENGTH[i] - 1;
                 }
                 else
-                    s += "public " + gettext(types[i]) + " " + names[i] + ";\n";
+                    s += "public " + gettext(types[i],i) + " " + names[i] + ";\n";
             }
 
             s += "}\n";
@@ -503,7 +526,7 @@ namespace STGAME.STExcelToClass
                     {
                         if (ARRAY_LENGTH[i] > 0)
                         {
-                            s += "t." + names[i] + "= new " + gettext(types[i]) + "[]{";
+                            s += "t." + names[i] + "= new " + gettext(types[i],i) + "[]{";
                             int index = 0; int k;
                             for (k = i; k < i + ARRAY_LENGTH[i]; k++)
                             {
@@ -541,6 +564,12 @@ namespace STGAME.STExcelToClass
                                             MessageBox.Show("Khi dùng \"is_..\" thì giá trị phải 1 hoặc 0");
                                         }
                                         break;
+                                    case TYPE.ENUM:
+                                        s+= typesNames[i] + "." + LINE[k] + ",";
+                                        if(!typesDictionraries.ContainsKey(typesNames[i]))typesDictionraries.Add(typesNames[i],new List<string>());
+                                        if(!typesDictionraries[typesNames[i]].Contains(LINE[k])) typesDictionraries[typesNames[i]].Add(LINE[k]);
+                                        break;
+
                                 }
                             }
                             if (k > i)
@@ -583,6 +612,12 @@ namespace STGAME.STExcelToClass
                                         MessageBox.Show("Khi dùng \"is_..\" thì giá trị phải 1 hoặc 0");
 
                                     }
+                                    break;
+                                case TYPE.ENUM:
+                                    if (LINE[i] == null || LINE[i].Length == 0) ;
+                                    else s += "t." + names[i] + "=" + typesNames[i]+"."  + LINE[i] + ";\n";
+                                    if (!typesDictionraries.ContainsKey(typesNames[i]))typesDictionraries.Add(typesNames[i], new List<string>());
+                                    if(!typesDictionraries[typesNames[i]].Contains(LINE[i])) typesDictionraries[typesNames[i]].Add(LINE[i]);
                                     break;
                             }
                         }
@@ -628,9 +663,17 @@ namespace STGAME.STExcelToClass
             if (textBox3_dir == null || textBox3_dir == "") dr = classname + ".cs";
             File.WriteAllText(Path.Combine(Application.dataPath, dr), s);
 
+
+            //Generate all enum types
+            if (parameters.IsGenEnum)
+            {
+                dr = textBox3_dir + "/" + class1 + ".cs";
+                if (textBox3_dir == null || textBox3_dir == "") dr = class1 + ".cs";
+                File.AppendAllText(Path.Combine(Application.dataPath, dr), GenerateEnums());
+            }
             return s;
         }
-        string gettext(TYPE type)
+        string gettext(TYPE type, int index)
         {
             switch (type)
             {
@@ -647,6 +690,7 @@ namespace STGAME.STExcelToClass
                     return "bool";
                     break;
             }
+            if(index>=0) return typesNames[index];
             return "flllloat";
         }
 
@@ -728,6 +772,11 @@ namespace STGAME.STExcelToClass
                                         MessageBox.Show("Khi dùng \"is_..\" thì giá trị phải 1 hoặc 0" + ",\n");
                                     }
                                     break;
+                                case TYPE.ENUM:
+                                    s.Append("\"" + LINE[k] + "\",");
+                                    if (!typesDictionraries.ContainsKey(typesNames[i])) typesDictionraries.Add(typesNames[i], new List<string>());
+                                    if (!typesDictionraries[typesNames[i]].Contains(LINE[k])) typesDictionraries[typesNames[i]].Add(LINE[k]);
+                                    break;
                             }
                         }
                         s.Replace(",", "", s.Length - 1, 1);
@@ -768,6 +817,11 @@ namespace STGAME.STExcelToClass
                                 {
                                     MessageBox.Show("Khi dùng \"is_..\" thì giá trị phải 1 hoặc 0" + ",\n");
                                 }
+                                break;
+                            case TYPE.ENUM:
+                                s.Append("\"" + names[i] + "\":\"" + LINE[i] + "\",\n");
+                                if (!typesDictionraries.ContainsKey(typesNames[i])) typesDictionraries.Add(typesNames[i], new List<string>());
+                                if (!typesDictionraries[typesNames[i]].Contains(LINE[i])) typesDictionraries[typesNames[i]].Add(LINE[i]);
                                 break;
                         }
                     }
@@ -860,6 +914,21 @@ namespace STGAME.STExcelToClass
             }
         }
 
+        string GenerateEnums()
+        {
+            string s = "\n";
+            foreach(KeyValuePair<string,List<string>> item in typesDictionraries)
+            {
+                s += "public enum " + item.Key + "\n{\n";
+                for(int i =0; i < item.Value.Count; i++)
+                {
+                    s += item.Value[i];
+                    if (i < item.Value.Count - 1) s += ",\n";
+                }
+                s += "\n}\n";
+            }
+            return s;
+        }
     }
 
     enum TYPE
@@ -867,7 +936,8 @@ namespace STGAME.STExcelToClass
         INT = 0,
         FLOAT = 1,
         STRING = 2,
-        BOOL = 3
+        BOOL = 3,
+        ENUM=4
     }
 
 
@@ -879,6 +949,7 @@ namespace STGAME.STExcelToClass
         public string JSONName = "toanstt";
         public float defaultFloat = 0;
         public int defaultInt = 0;
+        public bool IsGenEnum = false;
     }
 }
 #endif

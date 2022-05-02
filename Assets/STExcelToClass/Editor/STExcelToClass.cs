@@ -64,7 +64,7 @@ namespace STGAME.STExcelToClass
             GUILayout.BeginHorizontal("box");
             GUILayout.Label("Output Directory: ", EditorStyles.boldLabel);
             //textBox3_dir = EditorGUILayout.TextField("", textBox3_dir);
-            GUILayout.Label(textBox3_dir, EditorStyles.boldLabel);
+            GUILayout.Label(parameters.Path, EditorStyles.boldLabel);
             GUILayout.EndHorizontal();
             GUILayout.Label("------------------------STGAME---------------------------", EditorStyles.boldLabel);
             GUILayout.BeginHorizontal("box");
@@ -82,15 +82,15 @@ namespace STGAME.STExcelToClass
             }
             if (GUILayout.Button("Show all configs"))
             {
-                string s = 
-                     "IsStringId     : Force id to string type (default=false)\n";
+                string s =
+                     "IsStringId            : Force id to string type (default=false)\n";
                 s += "IsGenItemClass : Skip generate item class; generate proto file instead (default=true)\n";
-                s += "JSONName       : Json filename (default=toanstt)\n";
-                s += "DefaultFloat   : Default value of float (default=0)\n";
-                s += "DefaultInt     : Default value of int (default=0)\n";
+                s += "JSONName        : Json filename (default=toanstt)\n";
+                s += "DefaultFloat      : Default value of float (default=0)\n";
+                s += "DefaultInt          : Default value of int (default=0)\n";
                 s += "type:varname   : Force set variable type, type = {int,float,string,bool,enumName} \n";
-                s += "IsGenEnum      : Is Generate all enums (default=false) \n";
-                s += "Path           : Path to save the dataset (default=STGAME/Data)\n";
+                s += "IsGenEnum       : Is Generate all enums (default=true) \n";
+                s += "Path                   : Path to save the dataset (default=STGAME/Data)\n";
 
                 textBox1 = s;
                 AssetDatabase.Refresh();
@@ -101,7 +101,7 @@ namespace STGAME.STExcelToClass
         [Multiline]
         public string textBox1;
         public string outputText;
-        public string textBox3_dir;
+        //public string textBox3_dir;
 
         //public Form1()
         //{
@@ -141,7 +141,8 @@ namespace STGAME.STExcelToClass
         string[] LINE;
         TYPE[] types;
         string[] typesNames;
-        Dictionary<string, List<string>>  typesDictionraries;
+        Dictionary<string, List<string>> typesDictionraries;
+        Dictionary<string, Dictionary<string, string>> typesDictionrariesLevel2;
 
 
         string[] protoKeyworks = { "int32", "float", "string", "bool" };
@@ -150,7 +151,7 @@ namespace STGAME.STExcelToClass
 
             JSONCLASS();
 
-            Debug.Log("Files are generated in " + textBox3_dir);
+            Debug.Log("Files are generated in " + parameters.Path);
         }
         public void JSONCLASS()
         {
@@ -174,7 +175,7 @@ namespace STGAME.STExcelToClass
             gen_st_json(parameters.JSONName, str_name_class_object);
             Gen_st_hero_table(str_name_class_data, str_name_class_object, false);
 
-            Debug.Log("Files are generated in " + textBox3_dir);
+            Debug.Log("Files are generated in " + parameters.Path);
             //textBox1 = "";
         }
         private void button3_Click(object sender, EventArgs e)
@@ -189,7 +190,7 @@ namespace STGAME.STExcelToClass
             Gen_st_hero_table(str_name_class_data, str_name_class_object);
             //textBox1 = "";
 
-            Debug.Log("Files are generated in " + textBox3_dir);
+            Debug.Log("Files are generated in " + parameters.Path);
         }
         void InitData()
         {
@@ -245,15 +246,17 @@ namespace STGAME.STExcelToClass
             }
 
 
-
-
-            str_json_path_folder = lines[0].Split('\t')[3];
-
+            Debug.Log("parameters.Path:" + parameters.Path);
+            if (lines[0].Split('\t').Length >= 4 && !string.IsNullOrEmpty(lines[0].Split('\t')[3]))
+                parameters.Path = lines[0].Split('\t')[3];
+            Debug.Log("parameters.Path:" + parameters.Path);
+            str_json_path_folder = parameters.Path;
             trimames();
 
             str_json_path_folder = str_json_path_folder.Replace('\\', '/');
 
-            textBox3_dir = str_json_path_folder;
+            string textBox3_dir = str_json_path_folder;
+            Debug.Log("creating folder: " + textBox3_dir);
             if (textBox3_dir[textBox3_dir.Length - 1] == '/') textBox3_dir = textBox3_dir.Substring(0, textBox3_dir.Length - 1);
             if (!string.IsNullOrEmpty(textBox3_dir))
             {
@@ -329,6 +332,7 @@ namespace STGAME.STExcelToClass
             types = new TYPE[n];
             typesNames = new string[n];
             typesDictionraries = new Dictionary<string, List<string>>();
+            typesDictionrariesLevel2 = new Dictionary<string, Dictionary<string, string>>();
             for (int i = 0; i < n; i++)
             {
                 try
@@ -357,7 +361,7 @@ namespace STGAME.STExcelToClass
                 string[] separateLabel = names[i].Split(':');
                 if (separateLabel.Length >= 2)
                 {
-                    if(separateLabel.Length==3) // put a dummy variableName on top
+                    if (separateLabel.Length == 3) // put a dummy variableName on top
                     {
                         separateLabel[0] = separateLabel[1];
                         separateLabel[1] = separateLabel[2];
@@ -371,7 +375,7 @@ namespace STGAME.STExcelToClass
                     else
                     {
                         types[i] = TYPE.ENUM;
-                        typesNames[i] = separateLabel[0]; 
+                        typesNames[i] = separateLabel[0];
                     }
                 }
 
@@ -385,10 +389,10 @@ namespace STGAME.STExcelToClass
             {
                 switch (types[i])
                 {
-                    case TYPE.INT: typesNames[i] = "int"; break;    
+                    case TYPE.INT: typesNames[i] = "int"; break;
                     case TYPE.FLOAT: typesNames[i] = "float"; break;
-                    case TYPE.STRING : typesNames[i] = "string"; break;
-                    case TYPE.BOOL : typesNames[i] = "bool"; break;
+                    case TYPE.STRING: typesNames[i] = "string"; break;
+                    case TYPE.BOOL: typesNames[i] = "bool"; break;
                 }
             }
 
@@ -410,18 +414,18 @@ namespace STGAME.STExcelToClass
             {
                 if (ARRAY_LENGTH[i] > 0)
                 {
-                    s += "public " + gettext(types[i],i) + "[] " + names[i] + ";// length=" + ARRAY_LENGTH[i] + "\n";
+                    s += "public " + gettext(types[i], i) + "[] " + names[i] + ";// length=" + ARRAY_LENGTH[i] + "\n";
                     i += ARRAY_LENGTH[i] - 1;
                 }
                 else
-                    s += "public " + gettext(types[i],i) + " " + names[i] + ";\n";
+                    s += "public " + gettext(types[i], i) + " " + names[i] + ";\n";
             }
 
             s += "}\n";
             outputText = s;
             //MessageBox.Show(s);
-            string dr = textBox3_dir + "/" + classname + ".cs";
-            if (textBox3_dir == null || textBox3_dir == "") dr = classname + ".cs";
+            string dr = parameters.Path + "/" + classname + ".cs";
+            if (parameters.Path == null || parameters.Path == "") dr = classname + ".cs";
             //MessageBox.Show(Path.Combine(Application.dataPath, dr));
             File.WriteAllText(Path.Combine(Application.dataPath, dr), s);
             return s;
@@ -438,8 +442,8 @@ namespace STGAME.STExcelToClass
             }
             s += "}";
             Debug.Log(s);
-            string dr = textBox3_dir + "/" + classname + ".proto.txt";
-            if (textBox3_dir == null || textBox3_dir == "") dr = classname + ".proto.txt";
+            string dr = parameters.Path + "/" + classname + ".proto.txt";
+            if (parameters.Path == null || parameters.Path == "") dr = classname + ".proto.txt";
             File.WriteAllText(Path.Combine(Application.dataPath, dr), s);
             return s;
         }
@@ -459,7 +463,7 @@ namespace STGAME.STExcelToClass
             }
 
 
-                s += "public class " + classname + "  \n{\n";
+            s += "public class " + classname + "  \n{\n";
 
             //s += "public class " + classname + "  \n{\n";
 
@@ -523,7 +527,7 @@ namespace STGAME.STExcelToClass
             //define more variable
             s += "public void load()\n";
             s += "{\n";
-            
+
 
 
 
@@ -584,9 +588,20 @@ namespace STGAME.STExcelToClass
                                         }
                                         break;
                                     case TYPE.ENUM:
+                                        string enumInt = "";
+                                        string[] enumVales = LINE[k].Split(':');
+                                        if (enumVales.Length == 2) { LINE[k] = enumVales[0]; enumInt = enumVales[1]; }
                                         s += typesNames[i] + "." + LINE[k] + ",";
-                                        if (!typesDictionraries.ContainsKey(typesNames[i])) typesDictionraries.Add(typesNames[i], new List<string>());
-                                        if (!typesDictionraries[typesNames[i]].Contains(LINE[k])) typesDictionraries[typesNames[i]].Add(LINE[k]);
+                                        if (!string.IsNullOrEmpty(typesNames[i]))
+                                        {
+                                            if (!typesDictionraries.ContainsKey(typesNames[i])) typesDictionraries.Add(typesNames[i], new List<string>());
+                                            if (!typesDictionrariesLevel2.ContainsKey(typesNames[i])) typesDictionrariesLevel2.Add(typesNames[i], new Dictionary<string, string>());
+                                            if (!typesDictionraries[typesNames[i]].Contains(LINE[k])) typesDictionraries[typesNames[i]].Add(LINE[k]);
+                                            if (!string.IsNullOrEmpty(enumInt))
+                                            {
+                                                if (!typesDictionrariesLevel2[typesNames[i]].ContainsKey(LINE[k])) typesDictionrariesLevel2[typesNames[i]].Add(LINE[k], enumInt);
+                                            }
+                                        }
                                         break;
 
                                 }
@@ -633,10 +648,26 @@ namespace STGAME.STExcelToClass
                                     }
                                     break;
                                 case TYPE.ENUM:
+                                    string enumInt = "";
                                     if (LINE[i] == null || LINE[i].Length == 0) ;
-                                    else s += "t." + names[i] + "=" + typesNames[i] + "." + LINE[i] + ";\n";
-                                    if (!typesDictionraries.ContainsKey(typesNames[i])) typesDictionraries.Add(typesNames[i], new List<string>());
-                                    if (!typesDictionraries[typesNames[i]].Contains(LINE[i])) typesDictionraries[typesNames[i]].Add(LINE[i]);
+                                    else
+                                    {
+                                        string[] enumVales = LINE[i].Split(':');
+                                        if (enumVales.Length == 2) { LINE[i] = enumVales[0]; enumInt = enumVales[1]; }
+                                        s += "t." + names[i] + "=" + typesNames[i] + "." + LINE[i] + ";\n";
+                                    }
+
+                                    if (!string.IsNullOrEmpty(typesNames[i]))
+                                    {
+                                        if (!typesDictionraries.ContainsKey(typesNames[i])) typesDictionraries.Add(typesNames[i], new List<string>());
+                                        if (!typesDictionrariesLevel2.ContainsKey(typesNames[i])) typesDictionrariesLevel2.Add(typesNames[i], new Dictionary<string, string>());
+                                        if (!typesDictionraries[typesNames[i]].Contains(LINE[i])) typesDictionraries[typesNames[i]].Add(LINE[i]);
+                                        if (!string.IsNullOrEmpty(enumInt))
+                                        {
+
+                                            if (!typesDictionrariesLevel2[typesNames[i]].ContainsKey(LINE[i])) typesDictionrariesLevel2[typesNames[i]].Add(LINE[i], enumInt);
+                                        }
+                                    }
                                     break;
                             }
                         }
@@ -655,17 +686,17 @@ namespace STGAME.STExcelToClass
             }
             else
             {
-                if(!(textBox3_dir.IndexOf("Resources/") !=0 || textBox3_dir.IndexOf("Resource\\") != 0))
+                if (!(parameters.Path.IndexOf("Resources/") != 0 || parameters.Path.IndexOf("Resource\\") != 0))
                 {
                     Debug.Log("WARNING: YOU MUST put JSON file to Resources to load it in build");
                 }
 
-                string resourceDir = textBox3_dir.Replace("Resources/","");
+                string resourceDir = parameters.Path.Replace("Resources/", "");
                 resourceDir = resourceDir.Replace("Resources/", "");
                 resourceDir += "/" + parameters.JSONName;
                 resourceDir = resourceDir.Replace(".json", "");
-                s += "TextAsset jsonData = Resources.Load<TextAsset>(\""+resourceDir+"\");\n";
-                s += classname + "ListJSON lmyist = JsonUtility.FromJson<"+classname + "ListJSON> (jsonData.text);\n";
+                s += "TextAsset jsonData = Resources.Load<TextAsset>(\"" + resourceDir + "\");\n";
+                s += classname + "ListJSON lmyist = JsonUtility.FromJson<" + classname + "ListJSON> (jsonData.text);\n";
                 s += "foreach(" + class1 + " i in lmyist.list) { VALUE.Add(i.id, i); }\n";
 
             }
@@ -695,16 +726,16 @@ namespace STGAME.STExcelToClass
             //end
             s += "}\n";
             outputText = s;
-            string dr = textBox3_dir + "/" + classname + ".cs";
-            if (textBox3_dir == null || textBox3_dir == "") dr = classname + ".cs";
+            string dr = parameters.Path + "/" + classname + ".cs";
+            if (parameters.Path == null || parameters.Path == "") dr = classname + ".cs";
             File.WriteAllText(Path.Combine(Application.dataPath, dr), s);
 
 
             //Generate all enum types
             if (parameters.IsGenEnum)
             {
-                dr = textBox3_dir + "/" + class1 + ".cs";
-                if (textBox3_dir == null || textBox3_dir == "") dr = class1 + ".cs";
+                dr = parameters.Path + "/" + class1 + ".cs";
+                if (parameters.Path == null || parameters.Path == "") dr = class1 + ".cs";
                 File.AppendAllText(Path.Combine(Application.dataPath, dr), GenerateEnums());
             }
             return s;
@@ -726,7 +757,7 @@ namespace STGAME.STExcelToClass
                     return "bool";
                     break;
             }
-            if(index>=0) return typesNames[index];
+            if (index >= 0) return typesNames[index];
             return "flllloat";
         }
 
@@ -809,10 +840,19 @@ namespace STGAME.STExcelToClass
                                     }
                                     break;
                                 case TYPE.ENUM:
+                                    string enumInt = "";
+                                    string[] enumVales = LINE[k].Split(':');
+                                    if (enumVales.Length == 2) { LINE[k] = enumVales[0]; enumInt = enumVales[1]; }
                                     if (!typesDictionraries.ContainsKey(typesNames[i])) typesDictionraries.Add(typesNames[i], new List<string>());
+                                    if (!typesDictionrariesLevel2.ContainsKey(typesNames[i])) typesDictionrariesLevel2.Add(typesNames[i], new Dictionary<string, string>());
                                     if (!typesDictionraries[typesNames[i]].Contains(LINE[k])) typesDictionraries[typesNames[i]].Add(LINE[k]);
-                                    //s.Append("\"" + LINE[k] + "\",");
-                                    s.Append(  typesDictionraries[typesNames[i]].IndexOf(LINE[k]) + ",");
+                                    if (!string.IsNullOrEmpty(enumInt))
+                                    {
+                                        if (!typesDictionrariesLevel2[typesNames[i]].ContainsKey(LINE[k])) typesDictionrariesLevel2[typesNames[i]].Add(LINE[k], enumInt);
+                                    }
+                                    if (typesDictionrariesLevel2[typesNames[i]].ContainsKey(LINE[k]))
+                                        s.Append(typesDictionrariesLevel2[typesNames[i]][LINE[k]] + ",");
+                                    else s.Append(typesDictionraries[typesNames[i]].IndexOf(LINE[k]) + ",");
 
                                     break;
                             }
@@ -857,11 +897,19 @@ namespace STGAME.STExcelToClass
                                 }
                                 break;
                             case TYPE.ENUM:
-                                
+                                string enumInt = "";
+                                string[] enumVales = LINE[i].Split(':');
+                                if (enumVales.Length == 2) { LINE[i] = enumVales[0]; enumInt = enumVales[1]; }
                                 if (!typesDictionraries.ContainsKey(typesNames[i])) typesDictionraries.Add(typesNames[i], new List<string>());
+                                if (!typesDictionrariesLevel2.ContainsKey(typesNames[i])) typesDictionrariesLevel2.Add(typesNames[i], new Dictionary<string, string>());
                                 if (!typesDictionraries[typesNames[i]].Contains(LINE[i])) typesDictionraries[typesNames[i]].Add(LINE[i]);
-                                //s.Append("\"" + names[i] + "\":\"" + LINE[i] + "\",\n");
-                                s.Append("\"" + names[i] + "\":" + typesDictionraries[typesNames[i]].IndexOf(LINE[i]) + ",\n");
+                                if (!string.IsNullOrEmpty(enumInt))
+                                {
+                                    if (!typesDictionrariesLevel2[typesNames[i]].ContainsKey(LINE[i])) typesDictionrariesLevel2[typesNames[i]].Add(LINE[i], enumInt);
+                                }
+                                if (typesDictionrariesLevel2[typesNames[i]].ContainsKey(LINE[i]))
+                                    s.Append("\"" + names[i] + "\":" + typesDictionrariesLevel2[typesNames[i]][LINE[i]] + ",\n");
+                                else s.Append("\"" + names[i] + "\":" + typesDictionraries[typesNames[i]].IndexOf(LINE[i]) + ",\n");
                                 break;
                         }
                     }
@@ -888,8 +936,8 @@ namespace STGAME.STExcelToClass
             s.Append("]\n");
             s.Append("}");
 
-            string dr = textBox3_dir + "/" + namefile + ".json";
-            if (textBox3_dir == null || textBox3_dir == "") dr = namefile + ".json";
+            string dr = parameters.Path + "/" + namefile + ".json";
+            if (parameters.Path == null || parameters.Path == "") dr = namefile + ".json";
             File.WriteAllText(Path.Combine(Application.dataPath, dr), s.ToString());
         }
 
@@ -935,8 +983,8 @@ namespace STGAME.STExcelToClass
 
             s.Append("}");
 
-            string dr = textBox3_dir + "/" + class_data_name + ".cs";
-            if (textBox3_dir == null || textBox3_dir == "") dr = class_data_name + ".cs";
+            string dr = parameters.Path + "/" + class_data_name + ".cs";
+            if (parameters.Path == null || parameters.Path == "") dr = class_data_name + ".cs";
             File.WriteAllText(Path.Combine(Application.dataPath, dr), s.ToString());
         }
 
@@ -957,12 +1005,16 @@ namespace STGAME.STExcelToClass
         string GenerateEnums()
         {
             string s = "\n";
-            foreach(KeyValuePair<string,List<string>> item in typesDictionraries)
+            foreach (KeyValuePair<string, List<string>> item in typesDictionraries)
             {
                 s += "public enum " + item.Key + "\n{\n";
-                for(int i =0; i < item.Value.Count; i++)
+                for (int i = 0; i < item.Value.Count; i++)
                 {
                     s += item.Value[i];
+                    if (typesDictionrariesLevel2.ContainsKey(item.Key) && typesDictionrariesLevel2[item.Key].ContainsKey(item.Value[i]))
+                    {
+                        s += "=" + typesDictionrariesLevel2[item.Key][item.Value[i]];
+                    }
                     if (i < item.Value.Count - 1) s += ",\n";
                 }
                 s += "\n}\n";
@@ -977,7 +1029,7 @@ namespace STGAME.STExcelToClass
         FLOAT = 1,
         STRING = 2,
         BOOL = 3,
-        ENUM=4
+        ENUM = 4
     }
 
 
@@ -989,7 +1041,7 @@ namespace STGAME.STExcelToClass
         public string JSONName = "toanstt";
         public float DefaultFloat = 0;
         public int DefaultInt = 0;
-        public bool IsGenEnum = false;
+        public bool IsGenEnum = true;
         public string Path = "STGAME/Data";
     }
 }

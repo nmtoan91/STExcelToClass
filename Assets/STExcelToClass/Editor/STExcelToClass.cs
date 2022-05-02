@@ -86,10 +86,11 @@ namespace STGAME.STExcelToClass
                      "IsStringId     : Force id to string type (default=false)\n";
                 s += "IsGenItemClass : Skip generate item class; generate proto file instead (default=true)\n";
                 s += "JSONName       : Json filename (default=toanstt)\n";
-                s += "defaultFloat   : Default value of float (default=0)\n";
-                s += "defaultInt     : Default value of int (default=0)\n";
+                s += "DefaultFloat   : Default value of float (default=0)\n";
+                s += "DefaultInt     : Default value of int (default=0)\n";
                 s += "type:varname   : Force set variable type, type = {int,float,string,bool,enumName} \n";
                 s += "IsGenEnum      : Is Generate all enums (default=false) \n";
+                s += "Path           : Path to save the dataset (default=STGAME/Data)\n";
 
                 textBox1 = s;
                 AssetDatabase.Refresh();
@@ -449,7 +450,16 @@ namespace STGAME.STExcelToClass
             s += "using UnityEngine;\n";
             s += "using System.Collections;\n";
             s += "using System.Collections.Generic;\n";
-            s += "public class " + classname + "  \n{\n";
+
+
+
+            if (is_gen_data == false)
+            {
+                s += "[System.Serializable] public class " + classname + "ListJSON{ public " + class1 + "[] list;}\n\n";
+            }
+
+
+                s += "public class " + classname + "  \n{\n";
 
             //s += "public class " + classname + "  \n{\n";
 
@@ -513,7 +523,7 @@ namespace STGAME.STExcelToClass
             //define more variable
             s += "public void load()\n";
             s += "{\n";
-            s += "" + class1 + " t;";
+            
 
 
 
@@ -522,6 +532,8 @@ namespace STGAME.STExcelToClass
             string current_id = "null";
             bool is_have_id = false;
             if (is_gen_data == true)
+            {
+                s += "" + class1 + " t;";
                 for (int j = iStar + 1; j <= size; j++)
                 {
                     is_have_id = false;
@@ -533,7 +545,7 @@ namespace STGAME.STExcelToClass
                     {
                         if (ARRAY_LENGTH[i] > 0)
                         {
-                            s += "t." + names[i] + "= new " + gettext(types[i],i) + "[]{";
+                            s += "t." + names[i] + "= new " + gettext(types[i], i) + "[]{";
                             int index = 0; int k;
                             for (k = i; k < i + ARRAY_LENGTH[i]; k++)
                             {
@@ -544,13 +556,13 @@ namespace STGAME.STExcelToClass
                                 {
                                     case TYPE.FLOAT:
                                         if (LINE[k] == null || LINE[k].Length == 0)
-                                            s += parameters.defaultFloat + "f,";
+                                            s += parameters.DefaultFloat + "f,";
                                         else
                                             s += LINE[k] + "f,";
                                         break;
                                     case TYPE.INT:
                                         if (LINE[k] == null || LINE[k].Length == 0)
-                                            s += parameters.defaultInt + ",";
+                                            s += parameters.DefaultInt + ",";
                                         else
                                             s += LINE[k] + ",";
                                         break;
@@ -572,9 +584,9 @@ namespace STGAME.STExcelToClass
                                         }
                                         break;
                                     case TYPE.ENUM:
-                                        s+= typesNames[i] + "." + LINE[k] + ",";
-                                        if(!typesDictionraries.ContainsKey(typesNames[i]))typesDictionraries.Add(typesNames[i],new List<string>());
-                                        if(!typesDictionraries[typesNames[i]].Contains(LINE[k])) typesDictionraries[typesNames[i]].Add(LINE[k]);
+                                        s += typesNames[i] + "." + LINE[k] + ",";
+                                        if (!typesDictionraries.ContainsKey(typesNames[i])) typesDictionraries.Add(typesNames[i], new List<string>());
+                                        if (!typesDictionraries[typesNames[i]].Contains(LINE[k])) typesDictionraries[typesNames[i]].Add(LINE[k]);
                                         break;
 
                                 }
@@ -592,13 +604,13 @@ namespace STGAME.STExcelToClass
                             {
                                 case TYPE.FLOAT:
                                     if (LINE[i] == null || LINE[i].Length == 0)
-                                        s += "t." + names[i] + "=" + parameters.defaultFloat + "f;\n";
+                                        s += "t." + names[i] + "=" + parameters.DefaultFloat + "f;\n";
                                     else
                                         s += "t." + names[i] + "=" + LINE[i] + "f;\n";
                                     break;
                                 case TYPE.INT:
                                     if (LINE[i] == null || LINE[i].Length == 0)
-                                        s += "t." + names[i] + "=" + parameters.defaultInt + ";\n";
+                                        s += "t." + names[i] + "=" + parameters.DefaultInt + ";\n";
                                     else
                                         s += "t." + names[i] + "=" + LINE[i] + ";\n";
                                     break;
@@ -622,9 +634,9 @@ namespace STGAME.STExcelToClass
                                     break;
                                 case TYPE.ENUM:
                                     if (LINE[i] == null || LINE[i].Length == 0) ;
-                                    else s += "t." + names[i] + "=" + typesNames[i]+"."  + LINE[i] + ";\n";
-                                    if (!typesDictionraries.ContainsKey(typesNames[i]))typesDictionraries.Add(typesNames[i], new List<string>());
-                                    if(!typesDictionraries[typesNames[i]].Contains(LINE[i])) typesDictionraries[typesNames[i]].Add(LINE[i]);
+                                    else s += "t." + names[i] + "=" + typesNames[i] + "." + LINE[i] + ";\n";
+                                    if (!typesDictionraries.ContainsKey(typesNames[i])) typesDictionraries.Add(typesNames[i], new List<string>());
+                                    if (!typesDictionraries[typesNames[i]].Contains(LINE[i])) typesDictionraries[typesNames[i]].Add(LINE[i]);
                                     break;
                             }
                         }
@@ -640,6 +652,23 @@ namespace STGAME.STExcelToClass
                     else
                         s += "VALUE.Add(" + current_id + ", t);\n";
                 }
+            }
+            else
+            {
+                if(!(textBox3_dir.IndexOf("Resources/") !=0 || textBox3_dir.IndexOf("Resource\\") != 0))
+                {
+                    Debug.Log("WARNING: YOU MUST put JSON file to Resources to load it in build");
+                }
+
+                string resourceDir = textBox3_dir.Replace("Resources/","");
+                resourceDir = resourceDir.Replace("Resources/", "");
+                resourceDir += "/" + parameters.JSONName;
+                resourceDir = resourceDir.Replace(".json", "");
+                s += "TextAsset jsonData = Resources.Load<TextAsset>(\""+resourceDir+"\");\n";
+                s += classname + "ListJSON lmyist = JsonUtility.FromJson<"+classname + "ListJSON> (jsonData.text);\n";
+                s += "foreach(" + class1 + " i in lmyist.list) { VALUE.Add(i.id, i); }\n";
+
+            }
             s += "}\n";
             //function
 
@@ -752,13 +781,13 @@ namespace STGAME.STExcelToClass
                             {
                                 case TYPE.FLOAT:
                                     if (LINE[k] == null || LINE[k].Length == 0)
-                                        s.Append(parameters.defaultFloat + ",");
+                                        s.Append(parameters.DefaultFloat + ",");
                                     else
                                         s.Append(LINE[k] + ",");
                                     break;
                                 case TYPE.INT:
                                     if (LINE[k] == null || LINE[k].Length == 0)
-                                        s.Append(parameters.defaultInt + ",");
+                                        s.Append(parameters.DefaultInt + ",");
                                     else
                                         s.Append(LINE[k] + ",");
                                     break;
@@ -780,9 +809,11 @@ namespace STGAME.STExcelToClass
                                     }
                                     break;
                                 case TYPE.ENUM:
-                                    s.Append("\"" + LINE[k] + "\",");
                                     if (!typesDictionraries.ContainsKey(typesNames[i])) typesDictionraries.Add(typesNames[i], new List<string>());
                                     if (!typesDictionraries[typesNames[i]].Contains(LINE[k])) typesDictionraries[typesNames[i]].Add(LINE[k]);
+                                    //s.Append("\"" + LINE[k] + "\",");
+                                    s.Append(  typesDictionraries[typesNames[i]].IndexOf(LINE[k]) + ",");
+
                                     break;
                             }
                         }
@@ -798,13 +829,13 @@ namespace STGAME.STExcelToClass
                         {
                             case TYPE.FLOAT:
                                 if (LINE[i] == null || LINE[i].Length == 0)
-                                    s.Append("\"" + names[i] + "\":" + parameters.defaultFloat + ",\n");
+                                    s.Append("\"" + names[i] + "\":" + parameters.DefaultFloat + ",\n");
                                 else
                                     s.Append("\"" + names[i] + "\":" + LINE[i] + ",\n");
                                 break;
                             case TYPE.INT:
                                 if (LINE[i] == null || LINE[i].Length == 0)
-                                    s.Append("\"" + names[i] + "\":" + parameters.defaultInt + ",\n");
+                                    s.Append("\"" + names[i] + "\":" + parameters.DefaultInt + ",\n");
                                 else
                                     s.Append("\"" + names[i] + "\":" + LINE[i] + ",\n");
                                 break;
@@ -826,9 +857,11 @@ namespace STGAME.STExcelToClass
                                 }
                                 break;
                             case TYPE.ENUM:
-                                s.Append("\"" + names[i] + "\":\"" + LINE[i] + "\",\n");
+                                
                                 if (!typesDictionraries.ContainsKey(typesNames[i])) typesDictionraries.Add(typesNames[i], new List<string>());
                                 if (!typesDictionraries[typesNames[i]].Contains(LINE[i])) typesDictionraries[typesNames[i]].Add(LINE[i]);
+                                //s.Append("\"" + names[i] + "\":\"" + LINE[i] + "\",\n");
+                                s.Append("\"" + names[i] + "\":" + typesDictionraries[typesNames[i]].IndexOf(LINE[i]) + ",\n");
                                 break;
                         }
                     }
@@ -954,9 +987,10 @@ namespace STGAME.STExcelToClass
         public bool IsStringId = false;
         public bool IsGenItemClass = true;
         public string JSONName = "toanstt";
-        public float defaultFloat = 0;
-        public int defaultInt = 0;
+        public float DefaultFloat = 0;
+        public int DefaultInt = 0;
         public bool IsGenEnum = false;
+        public string Path = "STGAME/Data";
     }
 }
 #endif

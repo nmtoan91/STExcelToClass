@@ -1,7 +1,7 @@
 {
   "name": "com.stgame.exceltojsonclass",
   "displayName": "STGAME: Excel To Json Class",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "unity": "2021.3",
   "license": "MIT",
   "dependencies": {
@@ -11,12 +11,5 @@
     "url": "https://github.com/nmtoan91"
   },
   "type": "tool",
-  "description": "Library for converting excel table into JSON and/or Unity class: https://github.com/nmtoan91\n\n
-  IsStringId     : Force id to string type (default=false)\n
-  IsGenItemClass : Skip generate item class; generate proto file instead (default=true)
-  JSONName       : Json filename (default=toanstt)\n
-  defaultFloat   : Default value of float (default=0)\n
-  defaultInt     : Default value of int (default=0)\n
-  type:varname   : Force set variable type, with type = {int,float,string,bool,enumName}\n
-  IsGenEnum      : Is Generate all enums (default=false)"
+  "description": "Library for converting excel table into JSON and/or Unity class: https://github.com/nmtoan91\n\nIsStringId     : Force id to string type (default=false)\nIsGenItemClass : Skip generate item class; generate proto file instead (default=true)JSONName       : Json filename (default=toanstt)\ndefaultFloat   : Default value of float (default=0)\ndefaultInt     : Default value of int (default=0)\ntype:varname   : Force set variable type, with type = {int,float,string,bool,enumName}\nIsGenEnum      : Is Generate all enums (default=false)"
 }

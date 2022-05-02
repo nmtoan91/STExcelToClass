@@ -82,12 +82,13 @@ namespace STGAME.STExcelToClass
             }
             if (GUILayout.Button("Show all configs"))
             {
-                string s = "IsStringId     : Force id to string type (default=false)\n";
+                string s = 
+                     "IsStringId     : Force id to string type (default=false)\n";
                 s += "IsGenItemClass : Skip generate item class; generate proto file instead (default=true)\n";
                 s += "JSONName       : Json filename (default=toanstt)\n";
                 s += "defaultFloat   : Default value of float (default=0)\n";
                 s += "defaultInt     : Default value of int (default=0)\n";
-                s += "type:varname   : Force set variable type, type = {int,float,string,bool} \n";
+                s += "type:varname   : Force set variable type, type = {int,float,string,bool,enumName} \n";
                 s += "IsGenEnum      : Is Generate all enums (default=false) \n";
 
                 textBox1 = s;

@@ -808,7 +808,7 @@ namespace STGAME.STExcelToClass
                             if (LINE[k] == null || LINE[k].Length == 0)
                                 break; // break for short array
                             //core here
-                            switch (types[k])
+                            switch (types[i])
                             {
                                 case TYPE.FLOAT:
                                     if (LINE[k] == null || LINE[k].Length == 0)

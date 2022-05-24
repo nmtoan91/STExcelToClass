@@ -91,6 +91,7 @@ namespace STGAME.STExcelToClass
                 s += "type:varname   : Force set variable type, type = {int,float,string,bool,enumName} \n";
                 s += "IsGenEnum       : Is Generate all enums (default=true) \n";
                 s += "Path                   : Path to save the dataset (default=STGAME/Data)\n";
+                s += "IsGenSingleLineJSON  : Gen single line json for putting on code   \n";
 
                 textBox1 = s;
                 AssetDatabase.Refresh();
@@ -549,7 +550,10 @@ namespace STGAME.STExcelToClass
                     {
                         if (ARRAY_LENGTH[i] > 0)
                         {
-                            s += "t." + names[i] + "= new " + gettext(types[i], i) + "[]{";
+                            if(parameters.IsGenItemClass == true)
+                                s += "t." + names[i] + "= new " + gettext(types[i], i) + "[]{";
+                            else s += "t." + names[i] + ".AddRange(new " + gettext(types[i], i) + "[]{";
+
                             int index = 0; int k;
                             for (k = i; k < i + ARRAY_LENGTH[i]; k++)
                             {
@@ -608,7 +612,9 @@ namespace STGAME.STExcelToClass
                             }
                             if (k > i)
                                 s = s.Substring(0, s.Length - 1);
-                            s += "};\n";
+                            if (parameters.IsGenItemClass == true)
+                                s += "};\n";
+                            else s += "});\n";
                             i += ARRAY_LENGTH[i] - 1;
                         }
                         else
@@ -936,6 +942,12 @@ namespace STGAME.STExcelToClass
             s.Append("]\n");
             s.Append("}");
 
+            if(parameters.IsGenSingleLineJSON)
+            {
+                s = s.Replace("\n","");
+                s = s.Replace("\"", "\\\"");
+            }
+
             string dr = parameters.Path + "/" + namefile + ".json";
             if (parameters.Path == null || parameters.Path == "") dr = namefile + ".json";
             File.WriteAllText(Path.Combine(Application.dataPath, dr), s.ToString());
@@ -1043,6 +1055,7 @@ namespace STGAME.STExcelToClass
         public int DefaultInt = 0;
         public bool IsGenEnum = true;
         public string Path = "STGAME/Data";
+        public bool IsGenSingleLineJSON = false;
     }
 }
 #endif

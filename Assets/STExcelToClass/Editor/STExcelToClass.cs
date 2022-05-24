@@ -613,7 +613,7 @@ namespace STGAME.STExcelToClass
                         }
                         else
                         {
-                            if (names[i] == "id")
+                            if (names[i] == "id" || names[i] == "Id")
                             { current_id = LINE[i]; is_have_id = true; }
                             switch (types[i])
                             {
@@ -706,18 +706,18 @@ namespace STGAME.STExcelToClass
 
             if (parameters.IsStringId)
             {
-                s += "public static " + class1 + " get" + class1 + "ByID(string id)";
+                s += "public static " + class1 + " get" + class1.Replace(".","") + "ByID(string " + names[0] + ")";
                 s += "{";
-                s += "if(!I.VALUE.ContainsKey(id)) return null;";
-                s += "return I.VALUE[id];";
+                s += "if(!I.VALUE.ContainsKey("+names[0]+")) return null;";
+                s += "return I.VALUE[" + names[0] + "];";
                 s += "}";
             }
             else
             {
-                s += "public static " + class1 + " get" + class1 + "ByID(int id)";
+                s += "public static " + class1 + " get" + class1.Replace(".", "") + "ByID(int " + names[0] + ")";
                 s += "{";
-                s += "if(!I.VALUE.ContainsKey(id)) return null;";
-                s += "return I.VALUE[id];";
+                s += "if(!I.VALUE.ContainsKey(" + names[0] + ")) return null;";
+                s += "return I.VALUE[" + names[0] + "];";
                 s += "}";
             }
 
@@ -863,7 +863,7 @@ namespace STGAME.STExcelToClass
                     }
                     else
                     {
-                        if (names[i] == "id")
+                        if (names[i] == "id" || names[i] == "Id")
                         { current_id = LINE[i]; is_have_id = true; }
                         switch (types[i])
                         {
@@ -970,7 +970,7 @@ namespace STGAME.STExcelToClass
             s.Append("\t\t\tlst" + class_object_name + ".Add(obj.id,obj);\n\t\t}\n\t}\n");
 
 
-            s.Append("\tpublic static " + class_object_name + " get" + class_object_name + "ByID(int " + field_id + "){\n");
+            s.Append("\tpublic static " + class_object_name + " get" + class_object_name.Replace(".", "") + "ByID(int " + field_id + "){\n");
             //s.Append("\t\tfor (int i = 0; i < lst" + class_object_name + ".Count; i++){\n");
             //s.Append("\t\t\tif(lst" + class_object_name + "[i]." + field_id + " == " + field_id + ") return lst" + class_object_name + "[i];\n}");
             //s.Append("\t\t\treturn null;\n\t}\n");

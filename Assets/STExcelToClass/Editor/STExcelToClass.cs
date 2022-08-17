@@ -89,7 +89,7 @@ namespace STGAME.STExcelToClass
                 s += "DefaultFloat      : Default value of float (default=0)\n";
                 s += "DefaultInt          : Default value of int (default=0)\n";
                 s += "type:varname   : Force set variable type, type = {int,float,string,bool,enumName} \n";
-                s += "IsGenEnum       : Is Generate all enums (default=true) \n";
+                s += "SkipGenEnums       : Array of skiped enums \n";
                 s += "Path                   : Path to save the dataset (default=STGAME/Data)\n";
                 s += "IsGenSingleLineJSON  : Gen single line json for putting on code   \n";
 
@@ -301,6 +301,10 @@ namespace STGAME.STExcelToClass
 
             for (int i = 0; i < names.Count; i++)
             {
+                //names[i] = ExtractEnumNameAndProperties(names[i], false);
+                //Debug.LogError(names[i]);
+                //var v = names[i].Split(':');
+                //names[i] = v[v.Length-1];
                 if (names[i][names[i].Length - 1] == '0')
                 {
                     string name = names[i].Substring(0, names[i].Length - 1);
@@ -401,6 +405,9 @@ namespace STGAME.STExcelToClass
                     case TYPE.BOOL: typesNames[i] = "bool"; break;
                 }
             }
+
+            if (parameters.SkipGenEnums != null)
+                foreach (var v in parameters.SkipGenEnums) if (!typesSkipedForGenerate.Contains(v)) typesSkipedForGenerate.Add(v);
 
         }
         public string Gen_st_hero(string classname)
@@ -1080,7 +1087,7 @@ namespace STGAME.STExcelToClass
         public string JSONName = "toanstt";
         public float DefaultFloat = 0;
         public int DefaultInt = 0;
-        //public bool IsGenEnum = true;
+        public string[] SkipGenEnums = new string[0];
         public string Path = "STGAME/Data";
         public bool IsGenSingleLineJSON = false;
     }

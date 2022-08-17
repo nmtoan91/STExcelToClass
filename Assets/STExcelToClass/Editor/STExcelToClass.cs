@@ -142,7 +142,9 @@ namespace STGAME.STExcelToClass
         string[] LINE;
         TYPE[] types;
         string[] typesNames;
+
         Dictionary<string, List<string>> typesDictionraries;
+        List<string> typesSkipedForGenerate;
         Dictionary<string, Dictionary<string, string>> typesDictionrariesLevel2;
 
 
@@ -333,6 +335,7 @@ namespace STGAME.STExcelToClass
             LINE = lines[iStar + 1].Split('\t');
             types = new TYPE[n];
             typesNames = new string[n];
+            typesSkipedForGenerate = new List<string>();
             typesDictionraries = new Dictionary<string, List<string>>();
             typesDictionrariesLevel2 = new Dictionary<string, Dictionary<string, string>>();
             for (int i = 0; i < n; i++)
@@ -377,7 +380,8 @@ namespace STGAME.STExcelToClass
                     else
                     {
                         types[i] = TYPE.ENUM;
-                        typesNames[i] = separateLabel[0];
+                        //typesNames[i] = separateLabel[0];
+                        typesNames[i] = ExtractEnumNameAndProperties(separateLabel[0],true);
                     }
                 }
 
@@ -739,7 +743,7 @@ namespace STGAME.STExcelToClass
 
 
             //Generate all enum types
-            if (parameters.IsGenEnum)
+            //if (parameters.IsGenEnum)
             {
                 dr = parameters.Path + "/" + class1 + ".cs";
                 if (parameters.Path == null || parameters.Path == "") dr = class1 + ".cs";
@@ -1020,6 +1024,7 @@ namespace STGAME.STExcelToClass
             string s = "\n";
             foreach (KeyValuePair<string, List<string>> item in typesDictionraries)
             {
+                if (typesSkipedForGenerate.Contains(item.Key)) continue;
                 s += "public enum " + item.Key + "\n{\n";
                 for (int i = 0; i < item.Value.Count; i++)
                 {
@@ -1034,7 +1039,28 @@ namespace STGAME.STExcelToClass
             }
             return s;
         }
+        string ExtractEnumNameAndProperties(string s, bool isAddToSkipList)
+        {
+            int i = s.IndexOf("{");
+            int j = s.IndexOf("}");
+
+            if(j>i)
+            {
+                if (j != s.Length - 1) Debug.LogError("Invalid format; please use \"EnumName{false}\"");
+                
+                Debug.Log(i + " " + j + " " + (j - i - 1));
+                string val = s.Substring(i+1,j-i-1 );
+                s = s.Substring(0, i);
+                if (isAddToSkipList && val.Equals("") || val.Equals("0") || val.Equals("FALSE") || val.Equals("False") || val.Equals("false"))
+                {
+                    if(!typesSkipedForGenerate.Contains(s))
+                        typesSkipedForGenerate.Add(s);
+                }
+            } else if (j <= i && i>=0) Debug.LogError("Invalid format; please use \"EnumName{false}\"");
+            return s;
+        }
     }
+    
 
     enum TYPE
     {
@@ -1054,7 +1080,7 @@ namespace STGAME.STExcelToClass
         public string JSONName = "toanstt";
         public float DefaultFloat = 0;
         public int DefaultInt = 0;
-        public bool IsGenEnum = true;
+        //public bool IsGenEnum = true;
         public string Path = "STGAME/Data";
         public bool IsGenSingleLineJSON = false;
     }

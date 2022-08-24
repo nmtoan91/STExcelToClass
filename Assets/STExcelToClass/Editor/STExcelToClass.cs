@@ -85,14 +85,17 @@ namespace STGAME.STExcelToClass
                 string s =
                      "IsStringId            : Force id to string type (default=false)\n";
                 s += "IsGenItemClass : Skip generate item class; generate proto file instead (default=true)\n";
-                s += "JSONName        : Json filename (default=toanstt)\n";
+                s += "JSONName        : Json filename (default=StData/Data)\n";
                 s += "DefaultFloat      : Default value of float (default=0)\n";
                 s += "DefaultInt          : Default value of int (default=0)\n";
                 s += "type:varname   : Force set variable type, type = {int,float,string,bool,enumName} \n";
                 s += "SkipGenEnums       : Array of skiped enums \n";
                 s += "Path                   : Path to save the dataset (default=STGAME/Data)\n";
+                s += "PathJSON                   : Path to save the json file (default=#Path)\n";
+                
                 s += "IsGenSingleLineJSON  : Gen single line json for putting on code   \n";
-
+                s += "IsSeparateJSON  : Gen json data in separated files \n";
+                
                 textBox1 = s;
                 AssetDatabase.Refresh();
             }
@@ -172,6 +175,16 @@ namespace STGAME.STExcelToClass
         {
             InitData();
             ReadNames();
+
+            parameters.PathJSON = parameters.Path;
+            if (parameters.Path.IndexOf("Resources") < 0)
+            {
+                
+                parameters.PathJSON = "Resources/" + parameters.PathJSON;
+                Debug.LogError("JSON file must be placed in Resources folder; JSON file is storaged in " + parameters.PathJSON);
+                CreateFolderIfNotExist(parameters.PathJSON);
+            }
+
             TryToParseArray();
             LoadFirstData();
             Gen_st_hero(str_name_class_object);
@@ -242,6 +255,8 @@ namespace STGAME.STExcelToClass
                 parameters = JsonUtility.FromJson<STExcelParameters>(str_json_name_file2);
                 if (string.IsNullOrEmpty(parameters.JSONName))
                     parameters.JSONName = str_name_class_data + "_JSON";
+                if(string.IsNullOrEmpty(parameters.Path))
+                    parameters.Path = "StData/Data";
             }
             catch (Exception ex)
             {
@@ -250,10 +265,8 @@ namespace STGAME.STExcelToClass
             }
 
 
-            Debug.Log("parameters.Path:" + parameters.Path);
             if (lines[0].Split('\t').Length >= 4 && !string.IsNullOrEmpty(lines[0].Split('\t')[3]))
                 parameters.Path = lines[0].Split('\t')[3];
-            Debug.Log("parameters.Path:" + parameters.Path);
             str_json_path_folder = parameters.Path;
             trimames();
 
@@ -264,21 +277,22 @@ namespace STGAME.STExcelToClass
             if (textBox3_dir[textBox3_dir.Length - 1] == '/') textBox3_dir = textBox3_dir.Substring(0, textBox3_dir.Length - 1);
             if (!string.IsNullOrEmpty(textBox3_dir))
             {
-                //Debug.Log(textBox3_dir);
-                //Debug.Log(Path.GetDirectoryName(textBox3_dir));
-                //Directory.CreateDirectory(Path.GetDirectoryName(textBox3_dir));
+                CreateFolderIfNotExist(textBox3_dir);
+            }
 
-                string[] subFolders = textBox3_dir.Split('/');
-                string root = "Assets";
-                foreach (string subFolder in subFolders)
+            
+        }
+        void CreateFolderIfNotExist(string dir)
+        {
+            string[] subFolders = dir.Split('/');
+            string root = "Assets";
+            foreach (string subFolder in subFolders)
+            {
+                if (!AssetDatabase.IsValidFolder(root + "/" + subFolder))
                 {
-                    if (!AssetDatabase.IsValidFolder(root + "/" + subFolder))
-                    {
-                        string guid = AssetDatabase.CreateFolder(root, subFolder);
-                    }
-                    root += "/" + subFolder;
+                    string guid = AssetDatabase.CreateFolder(root, subFolder);
                 }
-
+                root += "/" + subFolder;
             }
         }
 
@@ -709,8 +723,10 @@ namespace STGAME.STExcelToClass
                     Debug.Log("WARNING: YOU MUST put JSON file to Resources to load it in build");
                 }
 
-                string resourceDir = parameters.Path.Replace("Resources/", "");
-                resourceDir = resourceDir.Replace("Resources/", "");
+                int ResourcesStringIndex = parameters.PathJSON.IndexOf("Resources")+10;
+                string resourceDir = parameters.PathJSON.Substring(ResourcesStringIndex, parameters.PathJSON.Length - ResourcesStringIndex);
+                //string resourceDir = parameters.Path.Replace("Resources/", "");
+                //resourceDir = resourceDir.Replace("Resources/", "");
                 resourceDir += "/" + parameters.JSONName;
                 resourceDir = resourceDir.Replace(".json", "");
                 s += "TextAsset jsonData = Resources.Load<TextAsset>(\"" + resourceDir + "\");\n";
@@ -798,10 +814,10 @@ namespace STGAME.STExcelToClass
 
         public void gen_st_json(string namefile, string class1)
         {
-            StringBuilder s = new StringBuilder();
-            s.Append("{\n");
-            s.Append("\"list\": \n");
-            s.Append("[\n");
+            StringBuilder S = new StringBuilder();
+            S.Append("{\n");
+            S.Append("\"list\": \n");
+            S.Append("[\n");
 
             string current_id = "null";
             bool is_have_id = false;
@@ -811,10 +827,11 @@ namespace STGAME.STExcelToClass
                 current_id = "null";
                 string sss = lines[j].Replace("\n", "");
                 LINE = sss.Split('\t');
+                StringBuilder s = new StringBuilder();
                 s.Append("{\n");
                 for (int i = 0; i < n; i++)
                 {
-
+                    
                     if (ARRAY_LENGTH[i] > 0)
                     {
                         s.Append("\"" + names[i] + "\":[");
@@ -932,10 +949,13 @@ namespace STGAME.STExcelToClass
                         }
                     }
 
+                    
                     if (i == n - 1)
                         s.Replace(",\n", "\n", s.Length - 2, 2);
                 }
+               
                 if (j == size) s.Append("}\n"); else s.Append("},\n");
+                S.Append(s);
                 if (is_have_id == false)
                 {
                     MessageBox.Show("ban ko ton tai id");
@@ -951,18 +971,18 @@ namespace STGAME.STExcelToClass
 
 
 
-            s.Append("]\n");
-            s.Append("}");
+            S.Append("]\n");
+            S.Append("}");
 
             if(parameters.IsGenSingleLineJSON)
             {
-                s = s.Replace("\n","");
-                s = s.Replace("\"", "\\\"");
+                S = S.Replace("\n","");
+                S = S.Replace("\"", "\\\"");
             }
 
-            string dr = parameters.Path + "/" + namefile + ".json";
-            if (parameters.Path == null || parameters.Path == "") dr = namefile + ".json";
-            File.WriteAllText(Path.Combine(Application.dataPath, dr), s.ToString());
+            string dr = parameters.PathJSON + "/" + namefile + ".json";
+            if (parameters.PathJSON == null || parameters.PathJSON == "") dr = namefile + ".json";
+            File.WriteAllText(Path.Combine(Application.dataPath, dr), S.ToString());
         }
 
         public void gen_st_read_json(string class_data_name, string class_object_name, string json_file_name, string json_folder, string field_id)
@@ -1084,12 +1104,14 @@ namespace STGAME.STExcelToClass
     {
         public bool IsStringId = false;
         public bool IsGenItemClass = true;
-        public string JSONName = "toanstt";
+        public string JSONName = "";
         public float DefaultFloat = 0;
         public int DefaultInt = 0;
         public string[] SkipGenEnums = new string[0];
-        public string Path = "STGAME/Data";
+        public string Path = "StData/Data";
+        public string PathJSON = "";
         public bool IsGenSingleLineJSON = false;
+        public bool IsSeparateJSON = false;
     }
 }
 #endif

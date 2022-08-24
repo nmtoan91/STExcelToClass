@@ -94,7 +94,7 @@ namespace STGAME.STExcelToClass
                 s += "PathJSON                   : Path to save the json file (default=#Path)\n";
                 
                 s += "IsGenSingleLineJSON  : Gen single line json for putting on code   \n";
-                s += "IsSeparateJSON  : Gen json data in separated files \n";
+                s += "IsSeparatedJSON  : Gen json data in separated files \n";
                 
                 textBox1 = s;
                 AssetDatabase.Refresh();
@@ -260,6 +260,7 @@ namespace STGAME.STExcelToClass
             }
             catch (Exception ex)
             {
+                Debug.LogError(ex.Message);
                 Debug.Log("Warning: Cannot parse json data, please use this format at cell (C:1): {\"IsStringId\":false,\"IsGenItemClass\":false,\"JSONName\":\"stLevelJSON\"}");
                 parameters.JSONName = str_json_name_file2;
             }
@@ -364,15 +365,16 @@ namespace STGAME.STExcelToClass
 
                     types[i] = TYPE.INT;
                 }
-                catch (Exception e)
+                catch //(Exception e)
                 {
                     try
                     {
                         float.Parse(LINE[i]);
                         types[i] = TYPE.FLOAT;
                     }
-                    catch (Exception e1)
+                    catch //(Exception e1)
                     {
+                        //Debug.Log(e1.)
                         types[i] = TYPE.STRING;
                     }
                 }
@@ -528,7 +530,10 @@ namespace STGAME.STExcelToClass
             s += "\tif (_instance == null)\n";
             s += "\t       {\n";
             s += "\t           _instance = new " + classname + "();\n";
+
+            if(!parameters.IsSeparatedJSON)
             s += "\t           _instance.load();\n";
+
             s += "\t       }\n";
             s += "\t       return _instance;\n";
             s += "\t}\n";
@@ -725,8 +730,7 @@ namespace STGAME.STExcelToClass
 
                 int ResourcesStringIndex = parameters.PathJSON.IndexOf("Resources")+10;
                 string resourceDir = parameters.PathJSON.Substring(ResourcesStringIndex, parameters.PathJSON.Length - ResourcesStringIndex);
-                //string resourceDir = parameters.Path.Replace("Resources/", "");
-                //resourceDir = resourceDir.Replace("Resources/", "");
+
                 resourceDir += "/" + parameters.JSONName;
                 resourceDir = resourceDir.Replace(".json", "");
                 s += "TextAsset jsonData = Resources.Load<TextAsset>(\"" + resourceDir + "\");\n";
@@ -750,12 +754,27 @@ namespace STGAME.STExcelToClass
             {
                 s += "public static " + class1 + " get" + class1.Replace(".", "") + "ByID(int " + names[0] + ")";
                 s += "{";
-                s += "if(!I.VALUE.ContainsKey(" + names[0] + ")) return null;";
+                s += "if(!I.VALUE.ContainsKey(" + names[0] + "))\n";
+                if (parameters.IsSeparatedJSON)
+                    s += "\treturn get" + class1.Replace(".", "") + "FromJSON(id);\n";
+                else s += "return null;\n";
                 s += "return I.VALUE[" + names[0] + "];";
                 s += "}";
             }
 
 
+            //load from sepraterd file 
+            int ResourcesStringIndex2 = parameters.PathJSON.IndexOf("Resources") + 10;
+            string resourceDir2 = parameters.PathJSON.Substring(ResourcesStringIndex2, parameters.PathJSON.Length - ResourcesStringIndex2);
+            resourceDir2 += "/" + parameters.JSONName; resourceDir2 = resourceDir2.Replace(".json", "");
+            s += "\n";
+            s += "public static " + class1 + " get" + class1.Replace(".", "") + "FromJSON(" + (parameters.IsStringId?"string":"int") + " id)\n";
+            s += "{\n";
+                s+="\tTextAsset jsonData = Resources.Load<TextAsset>(\"" + resourceDir2 + "_\" + id );\n";
+            s += "\tif (jsonData != null)\n";
+            s += "\t\treturn JsonUtility.FromJson<" + class1 + ">(jsonData.text);\n";
+                s += "\treturn null;\n";
+            s += "}\n";
 
             //end
             s += "}\n";
@@ -780,16 +799,12 @@ namespace STGAME.STExcelToClass
             {
                 case TYPE.FLOAT:
                     return "float";
-                    break;
                 case TYPE.INT:
                     return "int";
-                    break;
                 case TYPE.STRING:
                     return "string";
-                    break;
                 case TYPE.BOOL:
                     return "bool";
-                    break;
             }
             if (index >= 0) return typesNames[index];
             return "flllloat";
@@ -953,8 +968,18 @@ namespace STGAME.STExcelToClass
                     if (i == n - 1)
                         s.Replace(",\n", "\n", s.Length - 2, 2);
                 }
-               
-                if (j == size) s.Append("}\n"); else s.Append("},\n");
+
+                s.Append("}");
+                //finish a row here
+                if(parameters.IsSeparatedJSON)
+                {
+                    string d = parameters.PathJSON + "/" + namefile + "_" + current_id + ".json";
+                    if (parameters.PathJSON == null || parameters.PathJSON == "") d = namefile + ".json";
+                    File.WriteAllText(Path.Combine(Application.dataPath, d), s.ToString());
+                }
+
+                if (j < size) s.Append(","); s.Append("\n");
+
                 S.Append(s);
                 if (is_have_id == false)
                 {
@@ -1111,7 +1136,7 @@ namespace STGAME.STExcelToClass
         public string Path = "StData/Data";
         public string PathJSON = "";
         public bool IsGenSingleLineJSON = false;
-        public bool IsSeparateJSON = false;
+        public bool IsSeparatedJSON = false;
     }
 }
 #endif

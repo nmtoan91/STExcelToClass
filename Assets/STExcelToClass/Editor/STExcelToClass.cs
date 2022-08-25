@@ -162,7 +162,7 @@ namespace STGAME.STExcelToClass
         public void JSONCLASS()
         {
             InitData();
-            ReadNames();
+            ReadNames(false);
             TryToParseArray();
             LoadFirstData();
             Gen_st_hero(str_name_class_object);
@@ -174,8 +174,8 @@ namespace STGAME.STExcelToClass
         private void button2_Click(object sender, EventArgs e)
         {
             InitData();
-            ReadNames();
-            CreateFolderIfNotExist(parameters.PathJSON);
+            ReadNames(true);
+
 
 
             TryToParseArray();
@@ -187,20 +187,7 @@ namespace STGAME.STExcelToClass
             Debug.Log("Files are generated in " + parameters.Path);
             //textBox1 = "";
         }
-        private void button3_Click(object sender, EventArgs e)
-        {
-            InitData();
-            ReadNames();
 
-            TryToParseArray();
-            LoadFirstData();
-            Gen_st_hero(str_name_class_object);
-            gen_st_json(parameters.JSONName, str_name_class_object);
-            Gen_st_hero_table(str_name_class_data, str_name_class_object);
-            //textBox1 = "";
-
-            Debug.Log("Files are generated in " + parameters.Path);
-        }
         void InitData()
         {
             str = textBox1;
@@ -228,7 +215,7 @@ namespace STGAME.STExcelToClass
             }
 
         }
-        public void ReadNames()
+        public void ReadNames(bool isJSON)
         {
             //MessageBox.Show(String.Join("*", lines));
             LINE = lines[iStar].Split('\t');
@@ -278,11 +265,12 @@ namespace STGAME.STExcelToClass
             parameters.PathJSON = parameters.Path;
             if (parameters.Path.IndexOf("Resources") < 0)
             {
-
                 parameters.PathJSON = "Resources/" + parameters.PathJSON;
-                Debug.LogError("JSON file must be placed in Resources folder; JSON file is storaged in " + parameters.PathJSON);
-
-
+                if (isJSON)
+                {
+                    Debug.LogError("JSON file must be placed in Resources folder; JSON file is storaged in " + parameters.PathJSON);
+                    CreateFolderIfNotExist(parameters.PathJSON);
+                }
             }
 
         }
@@ -767,7 +755,7 @@ namespace STGAME.STExcelToClass
 
 
             //load from sepraterd file 
-            Debug.LogError(parameters.PathJSON);
+
             int ResourcesStringIndex2 = parameters.PathJSON.IndexOf("Resources") + 10;
             string resourceDir2 = parameters.PathJSON.Substring(ResourcesStringIndex2, parameters.PathJSON.Length - ResourcesStringIndex2);
             resourceDir2 += "/" + parameters.JSONName; resourceDir2 = resourceDir2.Replace(".json", "");

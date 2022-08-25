@@ -92,10 +92,10 @@ namespace STGAME.STExcelToClass
                 s += "SkipGenEnums       : Array of skiped enums \n";
                 s += "Path                   : Path to save the dataset (default=STGAME/Data)\n";
                 s += "PathJSON                   : Path to save the json file (default=#Path)\n";
-                
+
                 s += "IsGenSingleLineJSON  : Gen single line json for putting on code   \n";
                 s += "IsSeparatedJSON  : Gen json data in separated files \n";
-                
+
                 textBox1 = s;
                 AssetDatabase.Refresh();
             }
@@ -175,15 +175,8 @@ namespace STGAME.STExcelToClass
         {
             InitData();
             ReadNames();
+            CreateFolderIfNotExist(parameters.PathJSON);
 
-            parameters.PathJSON = parameters.Path;
-            if (parameters.Path.IndexOf("Resources") < 0)
-            {
-                
-                parameters.PathJSON = "Resources/" + parameters.PathJSON;
-                Debug.LogError("JSON file must be placed in Resources folder; JSON file is storaged in " + parameters.PathJSON);
-                CreateFolderIfNotExist(parameters.PathJSON);
-            }
 
             TryToParseArray();
             LoadFirstData();
@@ -255,7 +248,7 @@ namespace STGAME.STExcelToClass
                 parameters = JsonUtility.FromJson<STExcelParameters>(str_json_name_file2);
                 if (string.IsNullOrEmpty(parameters.JSONName))
                     parameters.JSONName = str_name_class_data + "_JSON";
-                if(string.IsNullOrEmpty(parameters.Path))
+                if (string.IsNullOrEmpty(parameters.Path))
                     parameters.Path = "StData/Data";
             }
             catch (Exception ex)
@@ -281,7 +274,17 @@ namespace STGAME.STExcelToClass
                 CreateFolderIfNotExist(textBox3_dir);
             }
 
-            
+
+            parameters.PathJSON = parameters.Path;
+            if (parameters.Path.IndexOf("Resources") < 0)
+            {
+
+                parameters.PathJSON = "Resources/" + parameters.PathJSON;
+                Debug.LogError("JSON file must be placed in Resources folder; JSON file is storaged in " + parameters.PathJSON);
+
+
+            }
+
         }
         void CreateFolderIfNotExist(string dir)
         {
@@ -401,7 +404,7 @@ namespace STGAME.STExcelToClass
                     {
                         types[i] = TYPE.ENUM;
                         //typesNames[i] = separateLabel[0];
-                        typesNames[i] = ExtractEnumNameAndProperties(separateLabel[0],true);
+                        typesNames[i] = ExtractEnumNameAndProperties(separateLabel[0], true);
                     }
                 }
 
@@ -531,8 +534,8 @@ namespace STGAME.STExcelToClass
             s += "\t       {\n";
             s += "\t           _instance = new " + classname + "();\n";
 
-            if(!parameters.IsSeparatedJSON)
-            s += "\t           _instance.load();\n";
+            if (!parameters.IsSeparatedJSON)
+                s += "\t           _instance.load();\n";
 
             s += "\t       }\n";
             s += "\t       return _instance;\n";
@@ -581,7 +584,7 @@ namespace STGAME.STExcelToClass
                     {
                         if (ARRAY_LENGTH[i] > 0)
                         {
-                            if(parameters.IsGenItemClass == true)
+                            if (parameters.IsGenItemClass == true)
                                 s += "t." + names[i] + "= new " + gettext(types[i], i) + "[]{";
                             else s += "t." + names[i] + ".AddRange(new " + gettext(types[i], i) + "[]{";
 
@@ -728,7 +731,7 @@ namespace STGAME.STExcelToClass
                     Debug.Log("WARNING: YOU MUST put JSON file to Resources to load it in build");
                 }
 
-                int ResourcesStringIndex = parameters.PathJSON.IndexOf("Resources")+10;
+                int ResourcesStringIndex = parameters.PathJSON.IndexOf("Resources") + 10;
                 string resourceDir = parameters.PathJSON.Substring(ResourcesStringIndex, parameters.PathJSON.Length - ResourcesStringIndex);
 
                 resourceDir += "/" + parameters.JSONName;
@@ -744,9 +747,9 @@ namespace STGAME.STExcelToClass
 
             if (parameters.IsStringId)
             {
-                s += "public static " + class1 + " get" + class1.Replace(".","") + "ByID(string " + names[0] + ")";
+                s += "public static " + class1 + " get" + class1.Replace(".", "") + "ByID(string " + names[0] + ")";
                 s += "{";
-                s += "if(!I.VALUE.ContainsKey("+names[0]+")) return null;";
+                s += "if(!I.VALUE.ContainsKey(" + names[0] + ")) return null;";
                 s += "return I.VALUE[" + names[0] + "];";
                 s += "}";
             }
@@ -764,16 +767,17 @@ namespace STGAME.STExcelToClass
 
 
             //load from sepraterd file 
+            Debug.LogError(parameters.PathJSON);
             int ResourcesStringIndex2 = parameters.PathJSON.IndexOf("Resources") + 10;
             string resourceDir2 = parameters.PathJSON.Substring(ResourcesStringIndex2, parameters.PathJSON.Length - ResourcesStringIndex2);
             resourceDir2 += "/" + parameters.JSONName; resourceDir2 = resourceDir2.Replace(".json", "");
             s += "\n";
-            s += "public static " + class1 + " get" + class1.Replace(".", "") + "FromJSON(" + (parameters.IsStringId?"string":"int") + " id)\n";
+            s += "public static " + class1 + " get" + class1.Replace(".", "") + "FromJSON(" + (parameters.IsStringId ? "string" : "int") + " id)\n";
             s += "{\n";
-                s+="\tTextAsset jsonData = Resources.Load<TextAsset>(\"" + resourceDir2 + "_\" + id );\n";
+            s += "\tTextAsset jsonData = Resources.Load<TextAsset>(\"" + resourceDir2 + "_\" + id );\n";
             s += "\tif (jsonData != null)\n";
             s += "\t\treturn JsonUtility.FromJson<" + class1 + ">(jsonData.text);\n";
-                s += "\treturn null;\n";
+            s += "\treturn null;\n";
             s += "}\n";
 
             //end
@@ -846,7 +850,7 @@ namespace STGAME.STExcelToClass
                 s.Append("{\n");
                 for (int i = 0; i < n; i++)
                 {
-                    
+
                     if (ARRAY_LENGTH[i] > 0)
                     {
                         s.Append("\"" + names[i] + "\":[");
@@ -964,14 +968,14 @@ namespace STGAME.STExcelToClass
                         }
                     }
 
-                    
+
                     if (i == n - 1)
                         s.Replace(",\n", "\n", s.Length - 2, 2);
                 }
 
                 s.Append("}");
                 //finish a row here
-                if(parameters.IsSeparatedJSON)
+                if (parameters.IsSeparatedJSON)
                 {
                     string d = parameters.PathJSON + "/" + namefile + "_" + current_id + ".json";
                     if (parameters.PathJSON == null || parameters.PathJSON == "") d = namefile + ".json";
@@ -999,9 +1003,9 @@ namespace STGAME.STExcelToClass
             S.Append("]\n");
             S.Append("}");
 
-            if(parameters.IsGenSingleLineJSON)
+            if (parameters.IsGenSingleLineJSON)
             {
-                S = S.Replace("\n","");
+                S = S.Replace("\n", "");
                 S = S.Replace("\"", "\\\"");
             }
 
@@ -1096,23 +1100,24 @@ namespace STGAME.STExcelToClass
             int i = s.IndexOf("{");
             int j = s.IndexOf("}");
 
-            if(j>i)
+            if (j > i)
             {
                 if (j != s.Length - 1) Debug.LogError("Invalid format; please use \"EnumName{false}\"");
-                
+
                 Debug.Log(i + " " + j + " " + (j - i - 1));
-                string val = s.Substring(i+1,j-i-1 );
+                string val = s.Substring(i + 1, j - i - 1);
                 s = s.Substring(0, i);
                 if (isAddToSkipList && val.Equals("") || val.Equals("0") || val.Equals("FALSE") || val.Equals("False") || val.Equals("false"))
                 {
-                    if(!typesSkipedForGenerate.Contains(s))
+                    if (!typesSkipedForGenerate.Contains(s))
                         typesSkipedForGenerate.Add(s);
                 }
-            } else if (j <= i && i>=0) Debug.LogError("Invalid format; please use \"EnumName{false}\"");
+            }
+            else if (j <= i && i >= 0) Debug.LogError("Invalid format; please use \"EnumName{false}\"");
             return s;
         }
     }
-    
+
 
     enum TYPE
     {

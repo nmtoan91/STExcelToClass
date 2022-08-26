@@ -28,33 +28,24 @@ namespace STGAME.STExcelToClass
 
         void OnGUI()
         {
-            //GUILayout.Label("Base Settings", EditorStyles.boldLabel);
-            //myString = EditorGUILayout.TextField("Text Field", textBox1);
-
-            //UnityEngine.Object file = Selection.activeObject;
-            //string rootPath;
-            //rootPath = AssetDatabase.GetAssetPath(file);
-            //string fullPath = Path.GetFullPath(AssetDatabase.GetAssetPath(file));
-
-
-
-
-            //GUILayout.Label("Type Definition", EditorStyles.boldLabel);
-            //textBox_floatdef = EditorGUILayout.TextField("Float definition", textBox_floatdef);
-            //textBox_intdef = EditorGUILayout.TextField("Int Definition", textBox_intdef);
-
-            //is_string_id = EditorGUILayout.Toggle("Is String Id", is_string_id);
+            
             GUILayout.BeginHorizontal("box");
-            if (GUILayout.Button("Export Class Only"))
-            {
-                button1_Click(null, null);
 
+            if (GUILayout.Button("Export Data"))
+            {
+                OnClickGen(null, null);
                 AssetDatabase.Refresh();
             }
 
-            if (GUILayout.Button("Export Class With JSon"))
+            if (GUILayout.Button("Export Class & Data"))
             {
-                button2_Click(null, null);
+                OnClickGenClassData(null, null);
+                AssetDatabase.Refresh();
+            }
+
+            if (GUILayout.Button("Export Class & JSON"))
+            {
+                OnClickGenJSONData(null, null);
                 AssetDatabase.Refresh();
             }
             GUILayout.EndHorizontal();
@@ -95,7 +86,8 @@ namespace STGAME.STExcelToClass
 
                 s += "IsGenSingleLineJSON  : Gen single line json for putting on code   \n";
                 s += "IsSeparatedJSON  : Gen json data in separated files \n";
-
+                s += "IsGenJSON        : Force to gen JSON with click Extract \n";
+                
                 textBox1 = s;
                 AssetDatabase.Refresh();
             }
@@ -152,31 +144,42 @@ namespace STGAME.STExcelToClass
 
 
         string[] protoKeyworks = { "int32", "float", "string", "bool" };
-        private void button1_Click(object sender, EventArgs e)
+
+        private void OnClickGen(object sender, EventArgs e)
         {
+            bool IsGenJSON = false;
+            if(textBox1.IndexOf("\"IsGenJSON\":true")>=0)
+                IsGenJSON = true;
+            else if (textBox1.IndexOf("\"IsGenJSON\":1") >= 0)
+                    IsGenJSON = true;
 
-            JSONCLASS();
-
-            Debug.Log("Files are generated in " + parameters.Path);
+            if (IsGenJSON)
+            {
+                Debug.Log("Generating JSON");
+                OnClickGenJSONData(sender, e);
+            }
+            else
+            {
+                Debug.Log("Generating Classes with data");
+                OnClickGenClassData(sender, e);
+            }
         }
-        public void JSONCLASS()
+        private void OnClickGenClassData(object sender, EventArgs e)
         {
+            //parameters.IsGenJSON = false;
             InitData();
             ReadNames(false);
             TryToParseArray();
             LoadFirstData();
             Gen_st_hero(str_name_class_object);
-            //gen_st_json(str_json_name_file, str_name_class_object);
             Gen_st_hero_table(str_name_class_data, str_name_class_object);
-            //textBox1 = "";
-
+            Debug.Log("Files are generated in " + parameters.Path);
         }
-        private void button2_Click(object sender, EventArgs e)
+        private void OnClickGenJSONData(object sender, EventArgs e)
         {
+            //parameters.IsGenJSON = true;
             InitData();
             ReadNames(true);
-
-
 
             TryToParseArray();
             LoadFirstData();
@@ -229,7 +232,6 @@ namespace STGAME.STExcelToClass
             str_name_class_object = lines[0].Split('\t')[0];
             str_name_class_data = lines[0].Split('\t')[1];
             string str_json_name_file2 = lines[0].Split('\t')[2];
-            //parameters = JsonUtility.FromJson(str_json_name_file, STExcelParameters);
             try
             {
                 parameters = JsonUtility.FromJson<STExcelParameters>(str_json_name_file2);
@@ -244,7 +246,7 @@ namespace STGAME.STExcelToClass
                 Debug.Log("Warning: Cannot parse json data, please use this format at cell (C:1): {\"IsStringId\":false,\"IsGenItemClass\":false,\"JSONName\":\"stLevelJSON\"}");
                 parameters.JSONName = str_json_name_file2;
             }
-
+            parameters.IsGenJSON = isJSON;
 
             if (lines[0].Split('\t').Length >= 4 && !string.IsNullOrEmpty(lines[0].Split('\t')[3]))
                 parameters.Path = lines[0].Split('\t')[3];
@@ -260,19 +262,18 @@ namespace STGAME.STExcelToClass
             {
                 CreateFolderIfNotExist(textBox3_dir);
             }
-
-
-            parameters.PathJSON = parameters.Path;
-            if (parameters.Path.IndexOf("Resources") < 0)
+             
+            if(string.IsNullOrEmpty(parameters.PathJSON))
+                parameters.PathJSON = parameters.Path;
+            if (parameters.PathJSON.IndexOf("Resources") < 0)
             {
                 parameters.PathJSON = "Resources/" + parameters.PathJSON;
                 if (isJSON)
                 {
                     Debug.LogError("JSON file must be placed in Resources folder; JSON file is storaged in " + parameters.PathJSON);
-                    CreateFolderIfNotExist(parameters.PathJSON);
                 }
             }
-
+            CreateFolderIfNotExist(parameters.PathJSON);
         }
         void CreateFolderIfNotExist(string dir)
         {
@@ -522,7 +523,7 @@ namespace STGAME.STExcelToClass
             s += "\t       {\n";
             s += "\t           _instance = new " + classname + "();\n";
 
-            if (!parameters.IsSeparatedJSON)
+            if (!parameters.IsGenJSON || !parameters.IsSeparatedJSON)
                 s += "\t           _instance.load();\n";
 
             s += "\t       }\n";
@@ -1130,6 +1131,7 @@ namespace STGAME.STExcelToClass
         public string PathJSON = "";
         public bool IsGenSingleLineJSON = false;
         public bool IsSeparatedJSON = false;
+        public bool IsGenJSON = false;
     }
 }
 #endif

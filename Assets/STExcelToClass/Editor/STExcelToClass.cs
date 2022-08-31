@@ -31,19 +31,19 @@ namespace STGAME.STExcelToClass
             
             GUILayout.BeginHorizontal("box");
 
-            if (GUILayout.Button("Export Data"))
+            if (GUILayout.Button("Import Data (Auto)"))
             {
                 OnClickGen(null, null);
                 AssetDatabase.Refresh();
             }
 
-            if (GUILayout.Button("Export Class & Data"))
+            if (GUILayout.Button("Import Data (Class)"))
             {
                 OnClickGenClassData(null, null);
                 AssetDatabase.Refresh();
             }
 
-            if (GUILayout.Button("Export Class & JSON"))
+            if (GUILayout.Button("Import Data (JSON)"))
             {
                 OnClickGenJSONData(null, null);
                 AssetDatabase.Refresh();
@@ -582,7 +582,15 @@ namespace STGAME.STExcelToClass
                             {
                                 index = k - i;
                                 if (LINE[k] == null || LINE[k].Length == 0)
+                                {
+                                    for(int k2 =k; k2 < i + ARRAY_LENGTH[i]; k2++)
+                                        if (!string.IsNullOrEmpty(LINE[k2]))
+                                        {
+                                            EditorUtility.DisplayDialog("STExcelToClass", string.Format("WARNING: There is a empty cell at row id:{0} col:{1}", current_id, k2), "OK");
+                                            break;
+                                        }    
                                     break; // break for short array
+                                }
                                 switch (types[i])
                                 {
                                     case TYPE.FLOAT:
@@ -849,7 +857,15 @@ namespace STGAME.STExcelToClass
                         {
                             index = k - i;
                             if (LINE[k] == null || LINE[k].Length == 0)
+                            {
+                                for (int k2 = k; k2 < i + ARRAY_LENGTH[i]; k2++)
+                                    if (!string.IsNullOrEmpty(LINE[k2]))
+                                    {
+                                        EditorUtility.DisplayDialog("STExcelToClass", string.Format("WARNING: There is a empty cell at row id:{0} col:{1}",current_id,k2), "OK");
+                                        break;
+                                    }
                                 break; // break for short array
+                            }
                             //core here
                             switch (types[i])
                             {

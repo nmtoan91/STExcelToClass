@@ -735,7 +735,7 @@ namespace STGAME.STExcelToClass
                 resourceDir = resourceDir.Replace(".json", "");
                 s += "TextAsset jsonData = Resources.Load<TextAsset>(\"" + resourceDir + "\");\n";
                 s += classname + "ListJSON lmyist = JsonUtility.FromJson<" + classname + "ListJSON> (jsonData.text);\n";
-                s += "foreach(" + class1 + " i in lmyist.list) { VALUE.Add(i.id, i); }\n";
+                s += "foreach(" + class1 + " i in lmyist.list) { VALUE.Add(i." + names[0] + ", i); }\n";
 
             }
             s += "}\n";
@@ -744,21 +744,21 @@ namespace STGAME.STExcelToClass
 
             if (parameters.IsStringId)
             {
-                s += "public static " + class1 + " get" + class1.Replace(".", "") + "ByID(string " + names[0] + ")";
+                s += "public static " + class1 + " get" + class1.Replace(".", "") + "ByID(string id)";
                 s += "{";
-                s += "if(!I.VALUE.ContainsKey(" + names[0] + ")) return null;";
-                s += "return I.VALUE[" + names[0] + "];";
+                s += "if(!I.VALUE.ContainsKey(id)) return null;";
+                s += "return I.VALUE[id];";
                 s += "}";
             }
             else
             {
-                s += "public static " + class1 + " get" + class1.Replace(".", "") + "ByID(int " + names[0] + ")";
+                s += "public static " + class1 + " get" + class1.Replace(".", "") + "ByID(int id)";
                 s += "{";
-                s += "if(!I.VALUE.ContainsKey(" + names[0] + "))\n";
+                s += "if(!I.VALUE.ContainsKey(id))\n";
                 if (parameters.IsSeparatedJSON)
                     s += "\treturn get" + class1.Replace(".", "") + "FromJSON(id);\n";
                 else s += "return null;\n";
-                s += "return I.VALUE[" + names[0] + "];";
+                s += "return I.VALUE[id];";
                 s += "}";
             }
 

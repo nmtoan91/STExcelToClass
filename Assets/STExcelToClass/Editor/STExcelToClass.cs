@@ -62,7 +62,11 @@ namespace STGAME.STExcelToClass
                 s += "3\t4\t4\t0\t2\t3\t\t2.4\tdf\tstring4\tstrings5\n";
                 s += "4\t4\t\t1\t2\t\t\t1.2\tdsf\tstring5\tstrings6\n";
                 textBox1 = s;
+                EditorGUILayout.TextArea(textBox1);
                 AssetDatabase.Refresh();
+                EditorUtility.SetDirty(this);
+                GUIUtility.keyboardControl = 0;
+                GUIUtility.hotControl = 0;
             }
             if (GUILayout.Button("Show all configs"))
             {
@@ -82,14 +86,18 @@ namespace STGAME.STExcelToClass
                 s += "IsGenJSON        : Force to gen JSON with click Extract \n";
 
                 textBox1 = s;
+                EditorGUILayout.TextArea(textBox1);
                 AssetDatabase.Refresh();
+                EditorUtility.SetDirty(this);
+                GUIUtility.keyboardControl = 0;
+                GUIUtility.hotControl = 0;
             }
 
             GUILayout.EndHorizontal();
 
 
 
-            GUILayout.Label("Past your excel table here", EditorStyles.boldLabel);
+            GUILayout.Label("Paste your excel table here", EditorStyles.boldLabel);
             textBox1 = EditorGUILayout.TextArea(textBox1);
             GUILayout.BeginHorizontal("box");
             //GUILayout.Label("Output Directory: ", EditorStyles.boldLabel);

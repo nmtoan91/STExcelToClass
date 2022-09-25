@@ -28,7 +28,7 @@ namespace STGAME.STExcelToClass
 
         void OnGUI()
         {
-            
+
             GUILayout.BeginHorizontal("box");
 
             if (GUILayout.Button("Import Data (Auto)"))
@@ -50,14 +50,7 @@ namespace STGAME.STExcelToClass
             }
             GUILayout.EndHorizontal();
 
-            GUILayout.Label("Source text from Excel", EditorStyles.boldLabel);
-            textBox1 = EditorGUILayout.TextArea(textBox1);
-            GUILayout.BeginHorizontal("box");
-            GUILayout.Label("Output Directory: ", EditorStyles.boldLabel);
-            //textBox3_dir = EditorGUILayout.TextField("", textBox3_dir);
-            GUILayout.Label(parameters.Path, EditorStyles.boldLabel);
-            GUILayout.EndHorizontal();
-            GUILayout.Label("------------------------STGAME---------------------------", EditorStyles.boldLabel);
+
             GUILayout.BeginHorizontal("box");
             if (GUILayout.Button("Insert sample data"))
             {
@@ -87,11 +80,43 @@ namespace STGAME.STExcelToClass
                 s += "IsGenSingleLineJSON  : Gen single line json for putting on code   \n";
                 s += "IsSeparatedJSON  : Gen json data in separated files \n";
                 s += "IsGenJSON        : Force to gen JSON with click Extract \n";
-                
+
                 textBox1 = s;
                 AssetDatabase.Refresh();
             }
+
             GUILayout.EndHorizontal();
+
+
+
+            GUILayout.Label("Past your excel table here", EditorStyles.boldLabel);
+            textBox1 = EditorGUILayout.TextArea(textBox1);
+            GUILayout.BeginHorizontal("box");
+            //GUILayout.Label("Output Directory: ", EditorStyles.boldLabel);
+            //textBox3_dir = EditorGUILayout.TextField("", textBox3_dir);
+            //GUILayout.Label(parameters.Path, EditorStyles.boldLabel);
+            GUILayout.EndHorizontal();
+
+
+            //GUILayout.Label("------------------------STGAME---------------------------", EditorStyles.boldLabel);
+            
+            //GUILayout.BeginHorizontal("box");
+            //GUILayout.Label("Config", EditorStyles.boldLabel);
+            //GUILayout.Label("Desciption", EditorStyles.boldLabel);
+            //GUILayout.EndHorizontal();
+
+            //GUILayout.BeginHorizontal("box");
+            //GUILayout.Label("Path");
+            //GUILayout.Label("Path to save the dataset (default=STGAME/Data)");
+            //GUILayout.EndHorizontal();
+            //GUILayout.BeginHorizontal("box");
+            //GUILayout.Label("PathJSON");
+            //GUILayout.Label("Path to save the json file (default=#Path)");
+            //GUILayout.EndHorizontal();
+            //GUILayout.BeginHorizontal("box");
+            //GUILayout.Label("IsGenJSON");
+            //GUILayout.Label("Force to gen JSON with auto gen button");
+            //GUILayout.EndHorizontal();
 
         }
         [Multiline]
@@ -144,14 +169,15 @@ namespace STGAME.STExcelToClass
 
 
         string[] protoKeyworks = { "int32", "float", "string", "bool" };
+        List<string> allDataIds = new List<string>();
 
         private void OnClickGen(object sender, EventArgs e)
         {
             bool IsGenJSON = false;
-            if(textBox1.IndexOf("\"IsGenJSON\":true")>=0)
+            if (textBox1.IndexOf("\"IsGenJSON\":true") >= 0)
                 IsGenJSON = true;
             else if (textBox1.IndexOf("\"IsGenJSON\":1") >= 0)
-                    IsGenJSON = true;
+                IsGenJSON = true;
 
             if (IsGenJSON)
             {
@@ -167,8 +193,11 @@ namespace STGAME.STExcelToClass
         private void OnClickGenClassData(object sender, EventArgs e)
         {
             //parameters.IsGenJSON = false;
+           
+            allDataIds.Clear();
             InitData();
             ReadNames(false);
+            parameters.IsSeparatedJSON = false;
             TryToParseArray();
             LoadFirstData();
             Gen_st_hero(str_name_class_object);
@@ -178,6 +207,7 @@ namespace STGAME.STExcelToClass
         private void OnClickGenJSONData(object sender, EventArgs e)
         {
             //parameters.IsGenJSON = true;
+            allDataIds.Clear();
             InitData();
             ReadNames(true);
 
@@ -262,8 +292,8 @@ namespace STGAME.STExcelToClass
             {
                 CreateFolderIfNotExist(textBox3_dir);
             }
-             
-            if(string.IsNullOrEmpty(parameters.PathJSON))
+
+            if (string.IsNullOrEmpty(parameters.PathJSON))
                 parameters.PathJSON = parameters.Path;
             if (parameters.PathJSON.IndexOf("Resources") < 0)
             {
@@ -498,10 +528,18 @@ namespace STGAME.STExcelToClass
             s += "public " + class1 + "[] list;\n";
             //end new for JSON parser
 
+            string scope = "public";
+            if (parameters.IsSeparatedJSON) scope = "private";
+           
             if (parameters.IsStringId)
-                s += "public Dictionary<string, " + class1 + "> VALUE;\n";
+                s += scope + " Dictionary<string, " + class1 + "> VALUE;\n";
             else
-                s += "public Dictionary<int, " + class1 + "> VALUE;\n";
+                s += scope + " Dictionary<int, " + class1 + "> VALUE;\n";
+            if (parameters.IsSeparatedJSON)
+            {
+                s = s.Substring(0, s.Length - 1);   
+                s += "// VALUE must be private for separated JSON files\n";
+            }
 
             s += "public " + classname + "()\n";
             s += "{\n";
@@ -583,12 +621,12 @@ namespace STGAME.STExcelToClass
                                 index = k - i;
                                 if (LINE[k] == null || LINE[k].Length == 0)
                                 {
-                                    for(int k2 =k; k2 < i + ARRAY_LENGTH[i]; k2++)
+                                    for (int k2 = k; k2 < i + ARRAY_LENGTH[i]; k2++)
                                         if (!string.IsNullOrEmpty(LINE[k2]))
                                         {
                                             EditorUtility.DisplayDialog("STExcelToClass", string.Format("WARNING: There is a empty cell at row id:{0} col:{1}", current_id, k2), "OK");
                                             break;
-                                        }    
+                                        }
                                     break; // break for short array
                                 }
                                 switch (types[i])
@@ -709,6 +747,12 @@ namespace STGAME.STExcelToClass
                             }
                         }
                     }
+
+                    if (allDataIds.Contains(current_id))
+                    {
+                        EditorUtility.DisplayDialog("STExcelToClass", string.Format("Duplicated id value: {0}", current_id), "OK");
+                    }
+                    else allDataIds.Add(current_id);
 
                     if (is_have_id == false)
                     {
@@ -861,7 +905,7 @@ namespace STGAME.STExcelToClass
                                 for (int k2 = k; k2 < i + ARRAY_LENGTH[i]; k2++)
                                     if (!string.IsNullOrEmpty(LINE[k2]))
                                     {
-                                        EditorUtility.DisplayDialog("STExcelToClass", string.Format("WARNING: There is a empty cell at row id:{0} col:{1}",current_id,k2), "OK");
+                                        EditorUtility.DisplayDialog("STExcelToClass", string.Format("WARNING: There is a empty cell at row id:{0} col:{1}", current_id, k2), "OK");
                                         break;
                                     }
                                 break; // break for short array
@@ -994,7 +1038,11 @@ namespace STGAME.STExcelToClass
                 {
                     MessageBox.Show("ban ko ton tai id");
                 }
-
+                if (allDataIds.Contains(current_id))
+                {
+                    EditorUtility.DisplayDialog("STExcelToClass", string.Format("Duplicated id value: {0}", current_id), "OK");
+                }
+                else allDataIds.Add(current_id);
                 //if (is_string_id)
                 //    s += "VALUE.Add(\"" + current_id + "\", t);\n";
                 //else

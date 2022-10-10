@@ -108,7 +108,7 @@ namespace STGAME.STExcelToClass
 
 
             //GUILayout.Label("------------------------STGAME---------------------------", EditorStyles.boldLabel);
-            
+
             //GUILayout.BeginHorizontal("box");
             //GUILayout.Label("Config", EditorStyles.boldLabel);
             //GUILayout.Label("Desciption", EditorStyles.boldLabel);
@@ -202,7 +202,7 @@ namespace STGAME.STExcelToClass
         private void OnClickGenClassData(object sender, EventArgs e)
         {
             //parameters.IsGenJSON = false;
-           
+
             allDataIds.Clear();
             InitData();
             ReadNames(false);
@@ -540,14 +540,14 @@ namespace STGAME.STExcelToClass
 
             string scope = "public";
             if (parameters.IsSeparatedJSON) scope = "private";
-           
+
             if (parameters.IsStringId)
                 s += scope + " Dictionary<string, " + class1 + "> VALUE;\n";
             else
                 s += scope + " Dictionary<int, " + class1 + "> VALUE;\n";
             if (parameters.IsSeparatedJSON)
             {
-                s = s.Substring(0, s.Length - 1);   
+                s = s.Substring(0, s.Length - 1);
                 s += "// VALUE must be private for separated JSON files, please use GetAllIds() function to get all ids\n";
             }
 
@@ -841,28 +841,29 @@ namespace STGAME.STExcelToClass
             if (parameters.IsGenJSON)
             {
                 s += $"static {stringOrInt}[] allIds = null;\n";
-                if (parameters.IsSeparatedJSON)
-                {
-                    
-                    s += $"public static {stringOrInt}[] GetAllIds()\n";
-                    s += "{\n";
-                    s += "if (allIds == null)\n";
-                    s += "{\n";
-                    s += $"TextAsset idsData = Resources.Load<TextAsset>(\"{resourceDir2}_\");\n";
-                    if (parameters.IsStringId)
-                        s += "allIds = idsData.text.Split('\\t');\n";
-                    else
-                        s += "allIds = Array.ConvertAll(idsData.text.Split('\\t'), int.Parse);\n";
-                    //
-                    s += "}\n";
-                    s += "return allIds;\n";
-                    s += "}\n";
-                    s += "public static void CloseDataTable(){allIds = null;}\n";
-                }
-                else 
-                {
-                    s += "public static void CloseDataTable(){allIds=null;_instance = null;}\n";
-                }
+                //if (parameters.IsSeparatedJSON)
+                //{
+
+                s += $"public static {stringOrInt}[] GetAllIds()\n";
+                s += "{\n";
+                s += "if (allIds == null)\n";
+                s += "{\n";
+                s += $"TextAsset idsData = Resources.Load<TextAsset>(\"{resourceDir2}_\");\n";
+                if (parameters.IsStringId)
+                    s += "allIds = idsData.text.Split('\\t');\n";
+                else
+                    s += "allIds = Array.ConvertAll(idsData.text.Split('\\t'), int.Parse);\n";
+                //
+                s += "}\n";
+                s += "return allIds;\n";
+                s += "}\n";
+                //s += "public static void CloseDataTable(){allIds = null;}\n";
+                s += "public static void CloseDataTable(){allIds=null;_instance = null;}\n";
+                //}
+                //else 
+                //{
+                //    s += "public static void CloseDataTable(){allIds=null;_instance = null;}\n";
+                //}
             }
             else
             {
@@ -871,7 +872,7 @@ namespace STGAME.STExcelToClass
                 s += "{\n";
                 s += "if (allIds == null)\n";
                 s += "{\n";
-                s += "I.VALUE.Keys.ToArray();\n";
+                s += "allIds = I.VALUE.Keys.ToArray();\n";
                 s += "}\n";
                 s += "return allIds;\n";
                 s += "}\n";
@@ -1124,10 +1125,10 @@ namespace STGAME.STExcelToClass
             File.WriteAllText(Path.Combine(Application.dataPath, dr), S.ToString());
 
             //generate all id into an index file
-            if(parameters.IsSeparatedJSON)
+            if (parameters.IsGenJSON)
             {
                 string idsText = "";
-                for(int i =0; i < allDataIds.Count; i++)
+                for (int i = 0; i < allDataIds.Count; i++)
                 {
                     idsText += allDataIds[i];
                     if (i < allDataIds.Count - 1) idsText += "\t";

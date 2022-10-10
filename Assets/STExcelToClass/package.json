@@ -1,7 +1,7 @@
 {
   "name": "com.stgame.exceltojsonclass",
   "displayName": "STGAME: Excel To Json Class",
-  "version": "3.2.6",
+  "version": "3.2.7",
   "unity": "2021.3",
   "license": "MIT",
   "dependencies": {

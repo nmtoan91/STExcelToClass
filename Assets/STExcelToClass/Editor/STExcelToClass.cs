@@ -8,6 +8,7 @@ using System.IO;
 using UnityEngine;
 using UnityEditor;
 using System.Text;
+using System.Collections;
 
 namespace STGAME.STExcelToClass
 {
@@ -514,6 +515,7 @@ namespace STGAME.STExcelToClass
             s += "using System.Collections;\n";
             s += "using System.Collections.Generic;\n";
             s += "using System;\n";
+            s += "using System.Linq;\n";
 
 
             if (is_gen_data == false)
@@ -835,31 +837,48 @@ namespace STGAME.STExcelToClass
 
 
             //reading all ids from _ text file
-            if (parameters.IsSeparatedJSON)
+            string stringOrInt = parameters.IsStringId ? "string" : "int";
+            if (parameters.IsGenJSON)
             {
-                string stringOrInt = parameters.IsStringId ? "string" : "int";
+                s += $"static {stringOrInt}[] allIds = null;\n";
+                if (parameters.IsSeparatedJSON)
+                {
+                    
+                    s += $"public static {stringOrInt}[] GetAllIds()\n";
+                    s += "{\n";
+                    s += "if (allIds == null)\n";
+                    s += "{\n";
+                    s += $"TextAsset idsData = Resources.Load<TextAsset>(\"{resourceDir2}_\");\n";
+                    if (parameters.IsStringId)
+                        s += "allIds = idsData.text.Split('\\t');\n";
+                    else
+                        s += "allIds = Array.ConvertAll(idsData.text.Split('\\t'), int.Parse);\n";
+                    //
+                    s += "}\n";
+                    s += "return allIds;\n";
+                    s += "}\n";
+                    s += "public static void CloseDataTable(){allIds = null;}\n";
+                }
+                else 
+                {
+                    s += "public static void CloseDataTable(){allIds=null;_instance = null;}\n";
+                }
+            }
+            else
+            {
                 s += $"static {stringOrInt}[] allIds = null;\n";
                 s += $"public static {stringOrInt}[] GetAllIds()\n";
                 s += "{\n";
                 s += "if (allIds == null)\n";
                 s += "{\n";
-                s += $"TextAsset idsData = Resources.Load<TextAsset>(\"{resourceDir2}_\");\n";
-                if (parameters.IsStringId)
-                    s += "allIds = idsData.text.Split('\\t');\n";
-                else
-                    s += "allIds = Array.ConvertAll(idsData.text.Split('\\t'), int.Parse);\n";
-                //
+                s += "I.VALUE.Keys.ToArray();\n";
                 s += "}\n";
                 s += "return allIds;\n";
                 s += "}\n";
-                s += "public static void CloseDataTable(){allIds = null;}\n";
-            }
-            else if(parameters.IsGenJSON)
-            {
-                s += "public static void CloseDataTable(){_instance = null;}\n";
+                s += "public static void CloseDataTable(){allIds=null;_instance = null;}\n";
             }
 
-            //end
+            //THE END
             s += "}\n";
             outputText = s;
             string dr = parameters.Path + "/" + classname + ".cs";

@@ -513,12 +513,12 @@ namespace STGAME.STExcelToClass
             s += "using UnityEngine;\n";
             s += "using System.Collections;\n";
             s += "using System.Collections.Generic;\n";
-
+            s += "using System;\n";
 
 
             if (is_gen_data == false)
             {
-                s += "[System.Serializable] public class " + classname + "ListJSON{ public " + class1 + "[] list;}\n\n";
+                s += "[System.Serializable] class " + classname + "ListJSON{ public " + class1 + "[] list;}\n\n";
             }
 
 
@@ -546,7 +546,7 @@ namespace STGAME.STExcelToClass
             if (parameters.IsSeparatedJSON)
             {
                 s = s.Substring(0, s.Length - 1);   
-                s += "// VALUE must be private for separated JSON files\n";
+                s += "// VALUE must be private for separated JSON files, please use GetAllIds() function to get all ids\n";
             }
 
             s += "public " + classname + "()\n";
@@ -579,20 +579,20 @@ namespace STGAME.STExcelToClass
 
             //Get
 
-            if (parameters.IsStringId)
-            {
-                s += "public " + class1 + " Get(string id)\n";
-                s += "{\n";
-                s += "return VALUE[id];\n";
-                s += "}\n";
-            }
-            else
-            {
-                s += "public " + class1 + " Get(int id)\n";
-                s += "{\n";
-                s += "return VALUE[id];\n";
-                s += "}\n";
-            }
+            //if (parameters.IsStringId)
+            //{
+            //    s += "public " + class1 + " Get(string id)\n";
+            //    s += "{\n";
+            //    s += "return VALUE[id];\n";
+            //    s += "}\n";
+            //}
+            //else
+            //{
+            //    s += "public " + class1 + " Get(int id)\n";
+            //    s += "{\n";
+            //    s += "return VALUE[id];\n";
+            //    s += "}\n";
+            //}
 
             //define more variable
             s += "public void load()\n";
@@ -796,21 +796,25 @@ namespace STGAME.STExcelToClass
 
             if (parameters.IsStringId)
             {
-                s += "public static " + class1 + " get" + class1.Replace(".", "") + "ByID(string id)";
-                s += "{";
-                s += "if(!I.VALUE.ContainsKey(id)) return null;";
-                s += "return I.VALUE[id];";
+                s += "public static " + class1 + " get" + class1.Replace(".", "") + "ByID(string id)\n";
+                s += "{\n";
+                s += "if(!I.VALUE.ContainsKey(id))\n";
+                if (parameters.IsSeparatedJSON)
+                    s += "\treturn get" + class1.Replace(".", "") + "FromJSON(id);\n";
+                else
+                    s += "return null;\n";
+                s += "return I.VALUE[id];\n";
                 s += "}";
             }
             else
             {
-                s += "public static " + class1 + " get" + class1.Replace(".", "") + "ByID(int id)";
-                s += "{";
+                s += "public static " + class1 + " get" + class1.Replace(".", "") + "ByID(int id)\n";
+                s += "{\n";
                 s += "if(!I.VALUE.ContainsKey(id))\n";
                 if (parameters.IsSeparatedJSON)
                     s += "\treturn get" + class1.Replace(".", "") + "FromJSON(id);\n";
                 else s += "return null;\n";
-                s += "return I.VALUE[id];";
+                s += "return I.VALUE[id];\n";
                 s += "}";
             }
 
@@ -828,6 +832,32 @@ namespace STGAME.STExcelToClass
             s += "\t\treturn JsonUtility.FromJson<" + class1 + ">(jsonData.text);\n";
             s += "\treturn null;\n";
             s += "}\n";
+
+
+            //reading all ids from _ text file
+            if (parameters.IsSeparatedJSON)
+            {
+                string stringOrInt = parameters.IsStringId ? "string" : "int";
+                s += $"static {stringOrInt}[] allIds = null;\n";
+                s += $"public static {stringOrInt}[] GetAllIds()\n";
+                s += "{\n";
+                s += "if (allIds == null)\n";
+                s += "{\n";
+                s += $"TextAsset idsData = Resources.Load<TextAsset>(\"{resourceDir2}_\");\n";
+                if (parameters.IsStringId)
+                    s += "allIds = idsData.text.Split('\\t');\n";
+                else
+                    s += "allIds = Array.ConvertAll(idsData.text.Split('\\t'), int.Parse);\n";
+                //
+                s += "}\n";
+                s += "return allIds;\n";
+                s += "}\n";
+                s += "public static void CloseDataTable(){allIds = null;}\n";
+            }
+            else if(parameters.IsGenJSON)
+            {
+                s += "public static void CloseDataTable(){_instance = null;}\n";
+            }
 
             //end
             s += "}\n";
@@ -1073,6 +1103,19 @@ namespace STGAME.STExcelToClass
             string dr = parameters.PathJSON + "/" + namefile + ".json";
             if (parameters.PathJSON == null || parameters.PathJSON == "") dr = namefile + ".json";
             File.WriteAllText(Path.Combine(Application.dataPath, dr), S.ToString());
+
+            //generate all id into an index file
+            if(parameters.IsSeparatedJSON)
+            {
+                string idsText = "";
+                for(int i =0; i < allDataIds.Count; i++)
+                {
+                    idsText += allDataIds[i];
+                    if (i < allDataIds.Count - 1) idsText += "\t";
+                }
+                string dr2 = parameters.PathJSON + "/" + namefile + "_.txt";
+                File.WriteAllText(Path.Combine(Application.dataPath, dr2), idsText);
+            }
         }
 
         public void gen_st_read_json(string class_data_name, string class_object_name, string json_file_name, string json_folder, string field_id)

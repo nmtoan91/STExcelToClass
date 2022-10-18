@@ -71,20 +71,34 @@ namespace STGAME.STExcelToClass
             }
             if (GUILayout.Button("Show all configs"))
             {
-                string s =
-                     "IsStringId            : Force id to string type (default=false)\n";
-                s += "IsGenItemClass : Skip generate item class; generate proto file instead (default=true)\n";
-                s += "JSONName        : Json filename (default=StData/Data)\n";
-                s += "DefaultFloat      : Default value of float (default=0)\n";
-                s += "DefaultInt          : Default value of int (default=0)\n";
-                s += "type:varname   : Force set variable type, type = {int,float,string,bool,enumName} \n";
-                s += "SkipGenEnums       : Array of skiped enums \n";
-                s += "Path                   : Path to save the dataset (default=STGAME/Data)\n";
-                s += "PathJSON                   : Path to save the json file (default=#Path)\n";
+                string s = "Parameters:\n";
+                //s += "\tIsStringId\t\t: Force id to string type (default=false)\n";
+                s += "\tPath\t\t\t: Path to save the dataset (default=STGAME/Data)\n";
+                s += "\tIsGenItemClass\t\t: Skip generate item class; generate proto file instead (default=true)\n";
+                
+                //s += "\tDefaultFloat\t\t: Default value of float (default=0)\n";
+                //s += "\tDefaultInt\t\t: Default value of int (default=0)\n";
+                
+                s += "\tSkipGenEnums\t\t: Array of skiped enums \n";
+                s += "\tIsGenJSON\t\t: Force to gen JSON with click Extract \n";
+                s += "\tJSONName\t\t: Json filename (default=StData/Data)\n";
+                s += "\tIsSeparatedJSON\t: Gen json data in separated files \n";
+                s += "\tIsGenSingleLineJSON\t: Gen single line json for putting on code   \n";
+                s += "\tPathJSON\t\t: Path to save the json file (default=#Path)\n";
 
-                s += "IsGenSingleLineJSON  : Gen single line json for putting on code   \n";
-                s += "IsSeparatedJSON  : Gen json data in separated files \n";
-                s += "IsGenJSON        : Force to gen JSON with click Extract \n";
+                s += "\nProperty naming rules:\n";
+                s += "\ttype:varname\t\t: Force set variable type, type = {int,float,string,bool,enumName} \n";
+                s += "\tExamples\t\t: aaa\tint:a\tstring:b\tenumName:c \n";
+
+
+
+                s += "\nEnum rules:\n";
+                s += "\tDefine\t\t\t: <enum_value><space><enum_int_value> \n";
+                s += "\tInit enum example\t: MyEnum{A 0, B 11, C 12}:variableName  \n";
+                s += "\tSkip generate an enum\t: MyEnum{false}:variableName  \n";
+
+                s += "\nContact:\n\ttoan_stt@yahoo.com   \n";
+                s += "\thttps://github.com/nmtoan91   \n";
 
                 textBox1 = s;
                 EditorGUILayout.TextArea(textBox1);
@@ -386,8 +400,8 @@ namespace STGAME.STExcelToClass
             types = new TYPE[n];
             typesNames = new string[n];
             typesSkipedForGenerate = new List<string>();
-            typesDictionraries = new Dictionary<string, List<string>>();
-            typesDictionrariesLevel2 = new Dictionary<string, Dictionary<string, string>>();
+            if (typesDictionraries == null) typesDictionraries = new Dictionary<string, List<string>>();
+            if (typesDictionrariesLevel2 == null) typesDictionrariesLevel2 = new Dictionary<string, Dictionary<string, string>>();
             for (int i = 0; i < n; i++)
             {
                 try
@@ -672,7 +686,7 @@ namespace STGAME.STExcelToClass
                                         break;
                                     case TYPE.ENUM:
                                         string enumInt = "";
-                                        string[] enumVales = LINE[k].Split(':');
+                                        string[] enumVales = LINE[k].Split(' ');
                                         if (enumVales.Length == 2) { LINE[k] = enumVales[0]; enumInt = enumVales[1]; }
                                         s += typesNames[i] + "." + LINE[k] + ",";
                                         if (!string.IsNullOrEmpty(typesNames[i]))
@@ -737,7 +751,7 @@ namespace STGAME.STExcelToClass
                                     if (LINE[i] == null || LINE[i].Length == 0) ;
                                     else
                                     {
-                                        string[] enumVales = LINE[i].Split(':');
+                                        string[] enumVales = LINE[i].Split(' ');
                                         if (enumVales.Length == 2) { LINE[i] = enumVales[0]; enumInt = enumVales[1]; }
                                         s += "t." + names[i] + "=" + typesNames[i] + "." + LINE[i] + ";\n";
                                     }
@@ -1002,7 +1016,7 @@ namespace STGAME.STExcelToClass
                                     break;
                                 case TYPE.ENUM:
                                     string enumInt = "";
-                                    string[] enumVales = LINE[k].Split(':');
+                                    string[] enumVales = LINE[k].Split(' ');
                                     if (enumVales.Length == 2) { LINE[k] = enumVales[0]; enumInt = enumVales[1]; }
                                     if (!typesDictionraries.ContainsKey(typesNames[i])) typesDictionraries.Add(typesNames[i], new List<string>());
                                     if (!typesDictionrariesLevel2.ContainsKey(typesNames[i])) typesDictionrariesLevel2.Add(typesNames[i], new Dictionary<string, string>());
@@ -1059,7 +1073,7 @@ namespace STGAME.STExcelToClass
                                 break;
                             case TYPE.ENUM:
                                 string enumInt = "";
-                                string[] enumVales = LINE[i].Split(':');
+                                string[] enumVales = LINE[i].Split(' ');
                                 if (enumVales.Length == 2) { LINE[i] = enumVales[0]; enumInt = enumVales[1]; }
                                 if (!typesDictionraries.ContainsKey(typesNames[i])) typesDictionraries.Add(typesNames[i], new List<string>());
                                 if (!typesDictionrariesLevel2.ContainsKey(typesNames[i])) typesDictionrariesLevel2.Add(typesNames[i], new Dictionary<string, string>());
@@ -1224,17 +1238,43 @@ namespace STGAME.STExcelToClass
             int i = s.IndexOf("{");
             int j = s.IndexOf("}");
 
+            string enumName = i >= 0 ? s.Substring(0, i) : s;
             if (j > i)
             {
                 if (j != s.Length - 1) Debug.LogError("Invalid format; please use \"EnumName{false}\"");
 
-                Debug.Log(i + " " + j + " " + (j - i - 1));
+                //Debug.Log(i + " " + j + " " + (j - i - 1));
                 string val = s.Substring(i + 1, j - i - 1);
                 s = s.Substring(0, i);
                 if (isAddToSkipList && val.Equals("") || val.Equals("0") || val.Equals("FALSE") || val.Equals("False") || val.Equals("false"))
                 {
                     if (!typesSkipedForGenerate.Contains(s))
                         typesSkipedForGenerate.Add(s);
+                }
+                else if (!(val.Equals("1") || val.Equals("TRUE") || val.Equals("True") || val.Equals("true")))
+                {
+
+                    string[] values = val.Split(',');
+                    if (typesDictionraries == null) typesDictionraries = new Dictionary<string, List<string>>();
+                    if (typesDictionrariesLevel2 == null) typesDictionrariesLevel2 = new Dictionary<string, Dictionary<string, string>>();
+
+                    if (!typesDictionraries.ContainsKey(enumName)) typesDictionraries.Add(enumName, new List<string>());
+                    if (!typesDictionrariesLevel2.ContainsKey(enumName)) typesDictionrariesLevel2.Add(enumName, new Dictionary<string, string>());
+                    for (int iv = 0; iv < values.Length; iv++)
+                    {
+                        string idString = values[iv];
+                        string valString = iv.ToString();
+                        if (idString.Split(' ').Length == 2)
+                        {
+                            valString = idString.Split(' ')[1];
+                            idString = idString.Split(' ')[0];
+                        }
+
+                        if (!typesDictionraries[enumName].Contains(idString))
+                            typesDictionraries[enumName].Add(idString);
+                        if (!typesDictionrariesLevel2[enumName].ContainsKey(idString))
+                            typesDictionrariesLevel2[enumName].Add(idString, valString);
+                    }
                 }
             }
             else if (j <= i && i >= 0) Debug.LogError("Invalid format; please use \"EnumName{false}\"");

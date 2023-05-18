@@ -73,13 +73,13 @@ namespace STGAME.STExcelToClass
             {
                 string s = "Parameters:\n";
                 //s += "\tIsStringId\t\t: Force id to string type (default=false)\n";
-                s += "\tPath\t\t\t: Path to save the dataset (default=STGAME/Data)\n";
+                s += "\tPath\t\t\t: Path to save the dataset (default=StData/Data)\n";
                 s += "\tIsGenItemClass\t\t: Skip generate item class; generate proto file instead (default=true)\n";
 
                 //s += "\tDefaultFloat\t\t: Default value of float (default=0)\n";
                 //s += "\tDefaultInt\t\t: Default value of int (default=0)\n";
 
-                s += "\tSkipGenEnums\t\t: Array of skiped enums \n";
+                //s += "\tSkipGenEnums\t\t: Array of skiped enums \n";
                 s += "\tIsGenJSON\t\t: Force to gen JSON with click Extract \n";
                 s += "\tJSONName\t\t: Json filename (default=StData/Data)\n";
                 s += "\tIsSeparatedJSON\t: Gen json data in separated files \n";
@@ -87,15 +87,15 @@ namespace STGAME.STExcelToClass
                 s += "\tPathJSON\t\t: Path to save the json file (default=#Path)\n";
 
                 s += "\nProperty naming rules:\n";
-                s += "\ttype:varname\t\t: Force set variable type, type = {int,float,string,bool,enumName} \n";
-                s += "\tExamples\t\t: aaa\tint:a\tstring:b\tenumName:c \n";
+                s += "\tvarname:type\t\t: Force set variable type, type = {int,float,string,bool,enumName} \n";
+                s += "\tExamples\t\t: aaa\ta:int\tb:string\tc:enumName \n";
 
 
 
                 s += "\nEnum rules:\n";
-                s += "\tDefine\t\t\t: <enum_value><space><enum_int_value> \n";
-                s += "\tInit enum example\t: MyEnum{A 0, B 11, C 12}:variableName  \n";
-                s += "\tSkip generate an enum\t: MyEnum{false}:variableName  \n";
+                s += "\tDefine\t\t\t: <enum_value>=<enum_int_value> \n";
+                s += "\tInit enum example\t: variableName:MyEnum{A=0,B=11,C}:  \n";
+                s += "\tSkip generate an enum\t: variableName:MyEnum{false}  \n";
 
                 s += "\nContact:\n\ttoan_stt@yahoo.com   \n";
                 s += "\thttps://github.com/nmtoan91   \n";
@@ -216,6 +216,8 @@ namespace STGAME.STExcelToClass
         private void OnClickGenClassData(object sender, EventArgs e)
         {
             //parameters.IsGenJSON = false;
+            if (typesDictionraries != null) typesDictionraries.Clear();
+            if (typesDictionrariesLevel2 != null) typesDictionrariesLevel2.Clear();
 
             allDataIds.Clear();
             InitData();
@@ -493,8 +495,8 @@ namespace STGAME.STExcelToClass
                 }
             }
 
-            if (parameters.SkipGenEnums != null)
-                foreach (var v in parameters.SkipGenEnums) if (!typesSkipedForGenerate.Contains(v)) typesSkipedForGenerate.Add(v);
+            //if (parameters.SkipGenEnums != null)
+                //foreach (var v in parameters.SkipGenEnums) if (!typesSkipedForGenerate.Contains(v)) typesSkipedForGenerate.Add(v);
 
         }
         public string Gen_st_hero(string classname)
@@ -719,7 +721,7 @@ namespace STGAME.STExcelToClass
                                     case TYPE.ENUM:
                                         string enumInt = "";
                                         //Debug.Log("cccc " + LINE[k]);
-                                        string[] enumVales = LINE[k].Split(':');
+                                        string[] enumVales = LINE[k].Split('=');
                                         if (enumVales.Length == 2) { LINE[k] = enumVales[0]; enumInt = enumVales[1]; }
                                         s += typesNames[i] + "." + LINE[k] + ",";
                                         if (!string.IsNullOrEmpty(typesNames[i]))
@@ -786,7 +788,7 @@ namespace STGAME.STExcelToClass
                                     if (LINE[i] == null || LINE[i].Length == 0) ;
                                     else
                                     {
-                                        string[] enumVales = LINE[i].Split(':');
+                                        string[] enumVales = LINE[i].Split('=');
                                         if (enumVales.Length == 2) { LINE[i] = enumVales[0]; enumInt = enumVales[1]; }
                                         s += "t." + names[i] + "=" + typesNames[i] + "." + LINE[i] + ";\n";
                                     }
@@ -1051,7 +1053,7 @@ namespace STGAME.STExcelToClass
                                     break;
                                 case TYPE.ENUM:
                                     string enumInt = "";
-                                    string[] enumVales = LINE[k].Split(':');
+                                    string[] enumVales = LINE[k].Split('=');
                                     if (enumVales.Length == 2) { LINE[k] = enumVales[0]; enumInt = enumVales[1]; }
                                     if (!typesDictionraries.ContainsKey(typesNames[i])) typesDictionraries.Add(typesNames[i], new List<string>());
                                     if (!typesDictionrariesLevel2.ContainsKey(typesNames[i])) typesDictionrariesLevel2.Add(typesNames[i], new Dictionary<string, string>());
@@ -1108,7 +1110,7 @@ namespace STGAME.STExcelToClass
                                 break;
                             case TYPE.ENUM:
                                 string enumInt = "";
-                                string[] enumVales = LINE[i].Split(':');
+                                string[] enumVales = LINE[i].Split('=');
                                 if (enumVales.Length == 2) { LINE[i] = enumVales[0]; enumInt = enumVales[1]; }
                                 if (!typesDictionraries.ContainsKey(typesNames[i])) typesDictionraries.Add(typesNames[i], new List<string>());
                                 if (!typesDictionrariesLevel2.ContainsKey(typesNames[i])) typesDictionrariesLevel2.Add(typesNames[i], new Dictionary<string, string>());
@@ -1299,16 +1301,18 @@ namespace STGAME.STExcelToClass
                     {
                         string idString = values[iv];
                         string valString = iv.ToString();
-                        if (idString.Split(' ').Length == 2)
+                        if (idString.Split('=').Length == 2)
                         {
-                            valString = idString.Split(' ')[1];
-                            idString = idString.Split(' ')[0];
+                            valString = idString.Split('=')[1];
+                            idString = idString.Split('=')[0];
+
+                            if (!typesDictionrariesLevel2[enumName].ContainsKey(idString))
+                                typesDictionrariesLevel2[enumName].Add(idString, valString);
                         }
 
                         if (!typesDictionraries[enumName].Contains(idString))
                             typesDictionraries[enumName].Add(idString);
-                        if (!typesDictionrariesLevel2[enumName].ContainsKey(idString))
-                            typesDictionrariesLevel2[enumName].Add(idString, valString);
+                        
                     }
                 }
             }
@@ -1337,7 +1341,7 @@ namespace STGAME.STExcelToClass
         public string JSONName = "";
         public float DefaultFloat = 0;
         public int DefaultInt = 0;
-        public string[] SkipGenEnums = new string[0];
+        //public string[] SkipGenEnums = new string[0];
         public string Path = "StData/Data";
         public string PathJSON = "";
         public bool IsGenSingleLineJSON = false;

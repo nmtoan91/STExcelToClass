@@ -183,8 +183,8 @@ namespace STGAME.STExcelToClass
         string str;
         string[] lines;
         string[] LINE;
-        TYPE[] types;
-        string[] typesNames;
+        List<TYPE> types;
+        List<string> typesNames;
 
         Dictionary<string, List<string>> typesDictionraries;
         List<string> typesSkipedForGenerate;
@@ -274,11 +274,36 @@ namespace STGAME.STExcelToClass
         public void ReadNames(bool isJSON)
         {
             //MessageBox.Show(String.Join("*", lines));
+            typesSkipedForGenerate = new List<string>();
             LINE = lines[iStar].Split('\t');
             n = LINE.Length;
+            types = new List<TYPE>();
+            typesNames = new List<string>();
+            for (int i = 0; i < n; i++)
+            {
+                types.Add(TYPE.NOT_DECICED_YET);
+                typesNames.Add(null);
+            }
+
 
             for (int i = 0; i < LINE.Length; i++)
             {
+                if (LINE[i].Split(':').Length >= 2)
+                {
+                    string[] substrings = LINE[i].Split(':');
+                    string presetType = substrings[1];
+                    if (presetType.Equals("int") || presetType.Equals("Int") || presetType.Equals("I") || presetType.Equals("i")) types[i] = TYPE.INT;
+                    else if (presetType.Equals("float") || presetType.Equals("Float") || presetType.Equals("F") || presetType.Equals("f")) types[i] = TYPE.FLOAT;
+                    else if (presetType.Equals("bool") || presetType.Equals("Bool") || presetType.Equals("Boolean") || presetType.Equals("B") || presetType.Equals("b")) types[i] = TYPE.BOOL;
+                    else if (presetType.Equals("string") || presetType.Equals("String") || presetType.Equals("S") || presetType.Equals("s")) types[i] = TYPE.STRING;
+                    else
+                    {
+                        types[i] = TYPE.ENUM;
+                        typesNames[i] = ExtractEnumNameAndProperties(presetType, true);
+                    }
+                    LINE[i] = substrings[0];
+                }
+
                 names.Add(LINE[i]);
             }
 
@@ -350,6 +375,8 @@ namespace STGAME.STExcelToClass
             if (names[names.Count - 1] == "")
             {
                 names.RemoveAt(names.Count - 1);
+                types.RemoveAt(names.Count - 1);
+                typesNames.RemoveAt(names.Count - 1);
                 n--;
             }
         }
@@ -361,10 +388,6 @@ namespace STGAME.STExcelToClass
 
             for (int i = 0; i < names.Count; i++)
             {
-                //names[i] = ExtractEnumNameAndProperties(names[i], false);
-                //Debug.LogError(names[i]);
-                //var v = names[i].Split(':');
-                //names[i] = v[v.Length-1];
                 if (names[i][names[i].Length - 1] == '0')
                 {
                     string name = names[i].Substring(0, names[i].Length - 1);
@@ -397,13 +420,39 @@ namespace STGAME.STExcelToClass
         public void LoadFirstData()
         {
             LINE = lines[iStar + 1].Split('\t');
-            types = new TYPE[n];
-            typesNames = new string[n];
-            typesSkipedForGenerate = new List<string>();
+            //types = new TYPE[n]; for (int i = 0; i < n; i++) types[i] = TYPE.NOT_DECICED_YET;
+
+            //typesNames = new string[n];
+            
             if (typesDictionraries == null) typesDictionraries = new Dictionary<string, List<string>>();
             if (typesDictionrariesLevel2 == null) typesDictionrariesLevel2 = new Dictionary<string, Dictionary<string, string>>();
+
+            //for (int i = 0; i < n; i++)
+            //{
+            //    Debug.Log("LINE= "+LINE[i]);
+
+            //    if (LINE[i].Split(':').Length>2)
+            //    {
+                    
+            //        string[] substrings = LINE[i].Split(':');
+            //        string presetType = substrings[1];
+            //        if (presetType.Equals("int") || presetType.Equals("Int")) types[i] = TYPE.INT;
+            //        else if (presetType.Equals("float") || presetType.Equals("Float")) types[i] = TYPE.FLOAT;
+            //        else if (presetType.Equals("bool") || presetType.Equals("Bool") || presetType.Equals("Boolean")) types[i] = TYPE.BOOL;
+            //        else if (presetType.Equals("string") || presetType.Equals("String")) types[i] = TYPE.STRING;
+            //        else
+            //        {
+            //            types[i] = TYPE.ENUM;
+            //            typesNames[i] = ExtractEnumNameAndProperties(presetType, true);
+            //        }
+            //        LINE[i] = substrings[0];
+            //        names[i] = substrings[0];
+            //    }
+            //}
+
             for (int i = 0; i < n; i++)
             {
+                if (types[i] != TYPE.NOT_DECICED_YET) continue;
                 try
                 {
                     int.Parse(LINE[i]);
@@ -427,29 +476,6 @@ namespace STGAME.STExcelToClass
                 if (names[i].IndexOf("can_") == 0) { types[i] = TYPE.BOOL; }
                 if (names[i].IndexOf("Is") == 0) { types[i] = TYPE.BOOL; }
                 if (names[i].IndexOf("Can") == 0) { types[i] = TYPE.BOOL; }
-
-                string[] separateLabel = names[i].Split(':');
-                if (separateLabel.Length >= 2)
-                {
-                    if (separateLabel.Length == 3) // put a dummy variableName on top
-                    {
-                        separateLabel[0] = separateLabel[1];
-                        separateLabel[1] = separateLabel[2];
-                    }
-
-                    names[i] = separateLabel[1];
-                    if (separateLabel[0].Equals("int") || separateLabel[1].Equals("Int")) types[i] = TYPE.INT;
-                    else if (separateLabel[0].Equals("float") || separateLabel[0].Equals("Float")) types[i] = TYPE.FLOAT;
-                    else if (separateLabel[0].Equals("bool") || separateLabel[0].Equals("Bool") || separateLabel[0].Equals("Boolean")) types[i] = TYPE.BOOL;
-                    else if (separateLabel[0].Equals("string") || separateLabel[0].Equals("String")) types[i] = TYPE.STRING;
-                    else
-                    {
-                        types[i] = TYPE.ENUM;
-                        //typesNames[i] = separateLabel[0];
-                        typesNames[i] = ExtractEnumNameAndProperties(separateLabel[0], true);
-                    }
-                }
-
             }
             if (types[0] == TYPE.STRING)
             {
@@ -692,7 +718,8 @@ namespace STGAME.STExcelToClass
                                         break;
                                     case TYPE.ENUM:
                                         string enumInt = "";
-                                        string[] enumVales = LINE[k].Split(' ');
+                                        //Debug.Log("cccc " + LINE[k]);
+                                        string[] enumVales = LINE[k].Split(':');
                                         if (enumVales.Length == 2) { LINE[k] = enumVales[0]; enumInt = enumVales[1]; }
                                         s += typesNames[i] + "." + LINE[k] + ",";
                                         if (!string.IsNullOrEmpty(typesNames[i]))
@@ -755,10 +782,11 @@ namespace STGAME.STExcelToClass
                                     break;
                                 case TYPE.ENUM:
                                     string enumInt = "";
+                                    //Debug.Log("dddd " + LINE[i]);
                                     if (LINE[i] == null || LINE[i].Length == 0) ;
                                     else
                                     {
-                                        string[] enumVales = LINE[i].Split(' ');
+                                        string[] enumVales = LINE[i].Split(':');
                                         if (enumVales.Length == 2) { LINE[i] = enumVales[0]; enumInt = enumVales[1]; }
                                         s += "t." + names[i] + "=" + typesNames[i] + "." + LINE[i] + ";\n";
                                     }
@@ -1023,7 +1051,7 @@ namespace STGAME.STExcelToClass
                                     break;
                                 case TYPE.ENUM:
                                     string enumInt = "";
-                                    string[] enumVales = LINE[k].Split(' ');
+                                    string[] enumVales = LINE[k].Split(':');
                                     if (enumVales.Length == 2) { LINE[k] = enumVales[0]; enumInt = enumVales[1]; }
                                     if (!typesDictionraries.ContainsKey(typesNames[i])) typesDictionraries.Add(typesNames[i], new List<string>());
                                     if (!typesDictionrariesLevel2.ContainsKey(typesNames[i])) typesDictionrariesLevel2.Add(typesNames[i], new Dictionary<string, string>());
@@ -1080,7 +1108,7 @@ namespace STGAME.STExcelToClass
                                 break;
                             case TYPE.ENUM:
                                 string enumInt = "";
-                                string[] enumVales = LINE[i].Split(' ');
+                                string[] enumVales = LINE[i].Split(':');
                                 if (enumVales.Length == 2) { LINE[i] = enumVales[0]; enumInt = enumVales[1]; }
                                 if (!typesDictionraries.ContainsKey(typesNames[i])) typesDictionraries.Add(typesNames[i], new List<string>());
                                 if (!typesDictionrariesLevel2.ContainsKey(typesNames[i])) typesDictionrariesLevel2.Add(typesNames[i], new Dictionary<string, string>());
@@ -1296,7 +1324,8 @@ namespace STGAME.STExcelToClass
         FLOAT = 1,
         STRING = 2,
         BOOL = 3,
-        ENUM = 4
+        ENUM = 4,
+        NOT_DECICED_YET = 10
     }
 
 

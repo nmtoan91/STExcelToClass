@@ -75,10 +75,10 @@ namespace STGAME.STExcelToClass
                 //s += "\tIsStringId\t\t: Force id to string type (default=false)\n";
                 s += "\tPath\t\t\t: Path to save the dataset (default=STGAME/Data)\n";
                 s += "\tIsGenItemClass\t\t: Skip generate item class; generate proto file instead (default=true)\n";
-                
+
                 //s += "\tDefaultFloat\t\t: Default value of float (default=0)\n";
                 //s += "\tDefaultInt\t\t: Default value of int (default=0)\n";
-                
+
                 s += "\tSkipGenEnums\t\t: Array of skiped enums \n";
                 s += "\tIsGenJSON\t\t: Force to gen JSON with click Extract \n";
                 s += "\tJSONName\t\t: Json filename (default=StData/Data)\n";
@@ -656,10 +656,16 @@ namespace STGAME.STExcelToClass
                                 switch (types[i])
                                 {
                                     case TYPE.FLOAT:
+
+
                                         if (LINE[k] == null || LINE[k].Length == 0)
                                             s += parameters.DefaultFloat + "f,";
                                         else
+                                        {
+                                            LINE[k] = LINE[k].Replace(",", "f,");
                                             s += LINE[k] + "f,";
+                                        }
+
                                         break;
                                     case TYPE.INT:
                                         if (LINE[k] == null || LINE[k].Length == 0)
@@ -702,6 +708,7 @@ namespace STGAME.STExcelToClass
                                         break;
 
                                 }
+
                             }
                             if (k > i)
                                 s = s.Substring(0, s.Length - 1);

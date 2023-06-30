@@ -719,21 +719,47 @@ namespace STGAME.STExcelToClass
                                         }
                                         break;
                                     case TYPE.ENUM:
-                                        string enumInt = "";
-                                        //Debug.Log("cccc " + LINE[k]);
-                                        string[] enumVales = LINE[k].Split('=');
-                                        if (enumVales.Length == 2) { LINE[k] = enumVales[0]; enumInt = enumVales[1]; }
-                                        s += typesNames[i] + "." + LINE[k] + ",";
-                                        if (!string.IsNullOrEmpty(typesNames[i]))
+
+
+                                        
+
+
+                                        string[] enumValues = LINE[k].Replace(" ","").Split(',');
+                                        foreach(string enumValue in enumValues)
                                         {
-                                            if (!typesDictionraries.ContainsKey(typesNames[i])) typesDictionraries.Add(typesNames[i], new List<string>());
-                                            if (!typesDictionrariesLevel2.ContainsKey(typesNames[i])) typesDictionrariesLevel2.Add(typesNames[i], new Dictionary<string, string>());
-                                            if (!typesDictionraries[typesNames[i]].Contains(LINE[k])) typesDictionraries[typesNames[i]].Add(LINE[k]);
-                                            if (!string.IsNullOrEmpty(enumInt))
+                                            string enumValue_ = enumValue;
+
+                                            string enumInt = "";
+                                            string[] enumKeyVales = enumValue.Split('=');
+                                            if (enumKeyVales.Length == 2) { enumValue_ = enumKeyVales[0]; enumInt = enumKeyVales[1]; }
+
+
+
+                                            if (enumValue_[0] >= '0' && enumValue_[0] <= '9')
+                                                s += '(' + typesNames[i] + ')' + enumValue_ + ",";
+                                            else
                                             {
-                                                if (!typesDictionrariesLevel2[typesNames[i]].ContainsKey(LINE[k])) typesDictionrariesLevel2[typesNames[i]].Add(LINE[k], enumInt);
+                                                s += typesNames[i] + "." + enumValue_ + ",";
+
+                                                if (!string.IsNullOrEmpty(typesNames[i]))
+                                                {
+                                                    if (!typesDictionraries.ContainsKey(typesNames[i])) typesDictionraries.Add(typesNames[i], new List<string>());
+                                                    if (!typesDictionrariesLevel2.ContainsKey(typesNames[i])) typesDictionrariesLevel2.Add(typesNames[i], new Dictionary<string, string>());
+                                                    if (!typesDictionraries[typesNames[i]].Contains(enumValue_)) typesDictionraries[typesNames[i]].Add(enumValue_);
+                                                    if (!string.IsNullOrEmpty(enumInt))
+                                                    {
+                                                        if (!typesDictionrariesLevel2[typesNames[i]].ContainsKey(enumValue_)) typesDictionrariesLevel2[typesNames[i]].Add(enumValue_, enumInt);
+                                                    }
+                                                }
                                             }
+
                                         }
+
+                                       
+                                        
+
+
+                                        
                                         break;
 
                                 }

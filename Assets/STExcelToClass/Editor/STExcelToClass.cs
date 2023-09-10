@@ -721,9 +721,9 @@ namespace STGAME.STExcelToClass
                                     case TYPE.ENUM:
 
 
-                                        
 
 
+                                        if (LINE[i] == "") break;
                                         string[] enumValues = LINE[k].Replace(" ","").Split(',');
                                         foreach(string enumValue in enumValues)
                                         {
@@ -811,7 +811,7 @@ namespace STGAME.STExcelToClass
                                 case TYPE.ENUM:
                                     string enumInt = "";
                                     //Debug.Log("dddd " + LINE[i]);
-                                    if (LINE[i] == null || LINE[i].Length == 0) ;
+                                    if (LINE[i] == null || LINE[i].Length == 0 || LINE[i] =="") ;
                                     else
                                     {
                                         string[] enumVales = LINE[i].Split('=');
@@ -1078,6 +1078,7 @@ namespace STGAME.STExcelToClass
                                     }
                                     break;
                                 case TYPE.ENUM:
+                                    if (LINE[i] == "") break;
                                     string enumInt = "";
                                     string[] enumVales = LINE[k].Split('=');
                                     if (enumVales.Length == 2) { LINE[k] = enumVales[0]; enumInt = enumVales[1]; }
@@ -1135,6 +1136,7 @@ namespace STGAME.STExcelToClass
                                 }
                                 break;
                             case TYPE.ENUM:
+                                if (LINE[i] == "") break;
                                 string enumInt = "";
                                 string[] enumVales = LINE[i].Split('=');
                                 if (enumVales.Length == 2) { LINE[i] = enumVales[0]; enumInt = enumVales[1]; }
@@ -1281,10 +1283,13 @@ namespace STGAME.STExcelToClass
             string s = "\n";
             foreach (KeyValuePair<string, List<string>> item in typesDictionraries)
             {
+                
                 if (typesSkipedForGenerate.Contains(item.Key)) continue;
                 s += "public enum " + item.Key + "\n{\n";
                 for (int i = 0; i < item.Value.Count; i++)
                 {
+                    if(string.IsNullOrEmpty(item.Value[i])) continue;
+
                     s += item.Value[i];
                     if (typesDictionrariesLevel2.ContainsKey(item.Key) && typesDictionrariesLevel2[item.Key].ContainsKey(item.Value[i]))
                     {

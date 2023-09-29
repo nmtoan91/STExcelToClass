@@ -311,20 +311,24 @@ namespace STGAME.STExcelToClass
 
             str_name_class_object = lines[0].Split('\t')[0];
             str_name_class_data = lines[0].Split('\t')[1];
-            string str_json_name_file2 = lines[0].Split('\t')[2];
-            try
+
+            if (lines[0].Split('\t').Length > 2 && !string.IsNullOrEmpty(lines[0].Split('\t')[2]))
             {
-                parameters = JsonUtility.FromJson<STExcelParameters>(str_json_name_file2);
-                if (string.IsNullOrEmpty(parameters.JSONName))
-                    parameters.JSONName = str_name_class_data + "_JSON";
-                if (string.IsNullOrEmpty(parameters.Path))
-                    parameters.Path = "StData/Data";
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError(ex.Message);
-                Debug.Log("Warning: Cannot parse json data, please use this format at cell (C:1): {\"IsStringId\":false,\"IsGenItemClass\":false,\"JSONName\":\"stLevelJSON\"}");
-                parameters.JSONName = str_json_name_file2;
+                string str_json_name_file2 = lines[0].Split('\t')[2];
+                try
+                {
+                    parameters = JsonUtility.FromJson<STExcelParameters>(str_json_name_file2);
+                    if (string.IsNullOrEmpty(parameters.JSONName))
+                        parameters.JSONName = str_name_class_data + "_JSON";
+                    if (string.IsNullOrEmpty(parameters.Path))
+                        parameters.Path = "StData/Data";
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError(ex.Message);
+                    Debug.Log("Warning: Cannot parse json data, please use this format at cell (C:1): {\"IsStringId\":false,\"IsGenItemClass\":false,\"JSONName\":\"stLevelJSON\"}");
+                    parameters.JSONName = str_json_name_file2;
+                }
             }
             parameters.IsGenJSON = isJSON;
 

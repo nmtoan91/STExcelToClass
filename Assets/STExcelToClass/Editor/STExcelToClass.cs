@@ -85,6 +85,8 @@ namespace STGAME.STExcelToClass
                 s += "\tIsSeparatedJSON\t: Gen json data in separated files \n";
                 s += "\tIsGenSingleLineJSON\t: Gen single line json for putting on code   \n";
                 s += "\tPathJSON\t\t: Path to save the json file (default=#Path)\n";
+                s += "\tIsSkipZeroValue\t\t: Is generate zero values (default=true)\n";
+
 
                 s += "\nProperty naming rules:\n";
                 s += "\tvarname:type\t\t: Force set variable type, type = {int,float,string,bool,enumName} \n";
@@ -429,7 +431,7 @@ namespace STGAME.STExcelToClass
             //types = new TYPE[n]; for (int i = 0; i < n; i++) types[i] = TYPE.NOT_DECICED_YET;
 
             //typesNames = new string[n];
-            
+
             if (typesDictionraries == null) typesDictionraries = new Dictionary<string, List<string>>();
             if (typesDictionrariesLevel2 == null) typesDictionrariesLevel2 = new Dictionary<string, Dictionary<string, string>>();
 
@@ -439,7 +441,7 @@ namespace STGAME.STExcelToClass
 
             //    if (LINE[i].Split(':').Length>2)
             //    {
-                    
+
             //        string[] substrings = LINE[i].Split(':');
             //        string presetType = substrings[1];
             //        if (presetType.Equals("int") || presetType.Equals("Int")) types[i] = TYPE.INT;
@@ -500,7 +502,7 @@ namespace STGAME.STExcelToClass
             }
 
             //if (parameters.SkipGenEnums != null)
-                //foreach (var v in parameters.SkipGenEnums) if (!typesSkipedForGenerate.Contains(v)) typesSkipedForGenerate.Add(v);
+            //foreach (var v in parameters.SkipGenEnums) if (!typesSkipedForGenerate.Contains(v)) typesSkipedForGenerate.Add(v);
 
         }
         public string Gen_st_hero(string classname)
@@ -691,7 +693,10 @@ namespace STGAME.STExcelToClass
 
 
                                         if (LINE[k] == null || LINE[k].Length == 0)
-                                            s += parameters.DefaultFloat + "f,";
+                                        {
+                                            //if(!parameters.IsSkipZeroValue)
+                                            s += "0f,";
+                                        }
                                         else
                                         {
                                             LINE[k] = LINE[k].Replace(",", "f,");
@@ -701,7 +706,7 @@ namespace STGAME.STExcelToClass
                                         break;
                                     case TYPE.INT:
                                         if (LINE[k] == null || LINE[k].Length == 0)
-                                            s += parameters.DefaultInt + ",";
+                                            s += "0" + ",";
                                         else
                                             s += LINE[k] + ",";
                                         break;
@@ -728,8 +733,8 @@ namespace STGAME.STExcelToClass
 
 
                                         if (LINE[i] == "") break;
-                                        string[] enumValues = LINE[k].Replace(" ","").Split(',');
-                                        foreach(string enumValue in enumValues)
+                                        string[] enumValues = LINE[k].Replace(" ", "").Split(',');
+                                        foreach (string enumValue in enumValues)
                                         {
                                             string enumValue_ = enumValue;
 
@@ -759,11 +764,11 @@ namespace STGAME.STExcelToClass
 
                                         }
 
-                                       
-                                        
 
 
-                                        
+
+
+
                                         break;
 
                                 }
@@ -783,39 +788,47 @@ namespace STGAME.STExcelToClass
                             switch (types[i])
                             {
                                 case TYPE.FLOAT:
-                                    if (LINE[i] == null || LINE[i].Length == 0)
-                                        s += "t." + names[i] + "=" + parameters.DefaultFloat + "f;\n";
+                                    if (LINE[i] == null || LINE[i].Length == 0 || LINE[i].Equals("0") || LINE[i].Equals("0.0"))
+                                    {
+                                        if (!parameters.IsSkipZeroValue)
+                                            s += "t." + names[i] + "=" + 0 + "f;\n";
+                                    }
                                     else
                                         s += "t." + names[i] + "=" + LINE[i] + "f;\n";
                                     break;
                                 case TYPE.INT:
-                                    if (LINE[i] == null || LINE[i].Length == 0)
-                                        s += "t." + names[i] + "=" + parameters.DefaultInt + ";\n";
+                                    if (LINE[i] == null || LINE[i].Length == 0 || LINE[i].Equals("0"))
+                                    {
+                                        if (!parameters.IsSkipZeroValue)
+                                            s += "t." + names[i] + "=" + 0 + ";\n";
+                                    }
                                     else
                                         s += "t." + names[i] + "=" + LINE[i] + ";\n";
                                     break;
                                 case TYPE.STRING:
-                                    s += "t." + names[i] + "=\"" + LINE[i] + "\";\n";
+                                    if (parameters.IsSkipZeroValue && string.IsNullOrEmpty(LINE[i]))
+                                        ;
+                                    else s += "t." + names[i] + "=\"" + LINE[i] + "\";\n";
                                     break;
                                 case TYPE.BOOL:
                                     if (LINE[i] == "1") s += "t." + names[i] + "=true;\n";
-                                    else if (LINE[i] == "0") s += "t." + names[i] + "=false;\n";
+                                    else if (LINE[i] == "0" && !parameters.IsSkipZeroValue) s += "t." + names[i] + "=false;\n";
                                     else if (LINE[i] == "true") s += "t." + names[i] + "=true;\n";
-                                    else if (LINE[i] == "false") s += "t." + names[i] + "=false;\n";
+                                    else if (LINE[i] == "false" && !parameters.IsSkipZeroValue) s += "t." + names[i] + "=false;\n";
                                     else if (LINE[i] == "TRUE") s += "t." + names[i] + "=true;\n";
-                                    else if (LINE[i] == "FALSE") s += "t." + names[i] + "=false;\n";
-                                    else if (LINE[i] == "") s += "t." + names[i] + "=false;\n";
+                                    else if (LINE[i] == "FALSE" && !parameters.IsSkipZeroValue) s += "t." + names[i] + "=false;\n";
+                                    else if (LINE[i] == "" && !parameters.IsSkipZeroValue) s += "t." + names[i] + "=false;\n";
                                     else if (LINE[i] != "") s += "t." + names[i] + "=true;\n";
-                                    else
-                                    {
-                                        MessageBox.Show("Khi dùng \"is_..\" thì giá trị phải 1 hoặc 0");
+                                    //else
+                                    //{
+                                    //    MessageBox.Show("Khi dùng \"is_..\" thì giá trị phải 1 hoặc 0");
 
-                                    }
+                                    //}
                                     break;
                                 case TYPE.ENUM:
                                     string enumInt = "";
                                     //Debug.Log("dddd " + LINE[i]);
-                                    if (LINE[i] == null || LINE[i].Length == 0 || LINE[i] =="") ;
+                                    if (LINE[i] == null || LINE[i].Length == 0 || LINE[i] == "") ;
                                     else
                                     {
                                         string[] enumVales = LINE[i].Split('=');
@@ -1054,13 +1067,13 @@ namespace STGAME.STExcelToClass
                             {
                                 case TYPE.FLOAT:
                                     if (LINE[k] == null || LINE[k].Length == 0)
-                                        s.Append(parameters.DefaultFloat + ",");
+                                        s.Append("0" + ",");
                                     else
                                         s.Append(LINE[k] + ",");
                                     break;
                                 case TYPE.INT:
                                     if (LINE[k] == null || LINE[k].Length == 0)
-                                        s.Append(parameters.DefaultInt + ",");
+                                        s.Append("0" + ",");
                                     else
                                         s.Append(LINE[k] + ",");
                                     break;
@@ -1111,33 +1124,42 @@ namespace STGAME.STExcelToClass
                         switch (types[i])
                         {
                             case TYPE.FLOAT:
-                                if (LINE[i] == null || LINE[i].Length == 0)
-                                    s.Append("\"" + names[i] + "\":" + parameters.DefaultFloat + ",\n");
+                                if (LINE[i] == null || LINE[i].Length == 0 || LINE[i].Equals("0") || LINE[i].Equals("0.0"))
+                                {
+                                    if (!parameters.IsSkipZeroValue)
+                                        s.Append("\"" + names[i] + "\":" + "0" + ",\n");
+                                }
                                 else
                                     s.Append("\"" + names[i] + "\":" + LINE[i] + ",\n");
                                 break;
                             case TYPE.INT:
-                                if (LINE[i] == null || LINE[i].Length == 0)
-                                    s.Append("\"" + names[i] + "\":" + parameters.DefaultInt + ",\n");
+                                if (LINE[i] == null || LINE[i].Length == 0 || LINE[i].Equals("0"))
+                                {
+                                    if (!parameters.IsSkipZeroValue)
+                                        s.Append("\"" + names[i] + "\":" + "0" + ",\n");
+                                }
                                 else
                                     s.Append("\"" + names[i] + "\":" + LINE[i] + ",\n");
                                 break;
                             case TYPE.STRING:
-                                s.Append("\"" + names[i] + "\":\"" + LINE[i] + "\",\n");
+                                if (parameters.IsSkipZeroValue && string.IsNullOrEmpty(LINE[i]))
+                                    ;
+                                else s.Append("\"" + names[i] + "\":\"" + LINE[i] + "\",\n");
+
                                 break;
                             case TYPE.BOOL:
                                 if (LINE[i] == "1") s.Append("\"" + names[i] + "\":true" + ",\n");
-                                else if (LINE[i] == "0") s.Append("\"" + names[i] + "\":false" + ",\n");
+                                else if (LINE[i] == "0" && !parameters.IsSkipZeroValue) s.Append("\"" + names[i] + "\":false" + ",\n");
                                 else if (LINE[i] == "true") s.Append("\"" + names[i] + "\":true" + ",\n");
-                                else if (LINE[i] == "false") s.Append("\"" + names[i] + "\":false" + ",\n");
+                                else if (LINE[i] == "false" && !parameters.IsSkipZeroValue) s.Append("\"" + names[i] + "\":false" + ",\n");
                                 else if (LINE[i] == "TRUE") s.Append("\"" + names[i] + "\":true" + ",\n");
-                                else if (LINE[i] == "FALSE") s.Append("\"" + names[i] + "\":false" + ",\n");
-                                else if (LINE[i] == "") s.Append("\"" + names[i] + "\":false" + ",\n");
+                                else if (LINE[i] == "FALSE" && !parameters.IsSkipZeroValue) s.Append("\"" + names[i] + "\":false" + ",\n");
+                                else if (LINE[i] == "" && !parameters.IsSkipZeroValue) s.Append("\"" + names[i] + "\":false" + ",\n");
                                 else if (LINE[i] != "") s.Append("\"" + names[i] + "\":true" + ",\n");
-                                else
-                                {
-                                    MessageBox.Show("Khi dùng \"is_..\" thì giá trị phải 1 hoặc 0" + ",\n");
-                                }
+                                //else
+                                //{
+                                //    MessageBox.Show("Khi dùng \"is_..\" thì giá trị phải 1 hoặc 0" + ",\n");
+                                //}
                                 break;
                             case TYPE.ENUM:
                                 if (LINE[i] == "") break;
@@ -1287,12 +1309,12 @@ namespace STGAME.STExcelToClass
             string s = "\n";
             foreach (KeyValuePair<string, List<string>> item in typesDictionraries)
             {
-                
+
                 if (typesSkipedForGenerate.Contains(item.Key)) continue;
                 s += "public enum " + item.Key + "\n{\n";
                 for (int i = 0; i < item.Value.Count; i++)
                 {
-                    if(string.IsNullOrEmpty(item.Value[i])) continue;
+                    if (string.IsNullOrEmpty(item.Value[i])) continue;
 
                     s += item.Value[i];
                     if (typesDictionrariesLevel2.ContainsKey(item.Key) && typesDictionrariesLevel2[item.Key].ContainsKey(item.Value[i]))
@@ -1347,7 +1369,7 @@ namespace STGAME.STExcelToClass
 
                         if (!typesDictionraries[enumName].Contains(idString))
                             typesDictionraries[enumName].Add(idString);
-                        
+
                     }
                 }
             }
@@ -1374,14 +1396,15 @@ namespace STGAME.STExcelToClass
         public bool IsStringId = false;
         public bool IsGenItemClass = true;
         public string JSONName = "";
-        public float DefaultFloat = 0;
-        public int DefaultInt = 0;
+        //public float DefaultFloat = 0;
+        //public int DefaultInt = 0;
         //public string[] SkipGenEnums = new string[0];
         public string Path = "StData/Data";
         public string PathJSON = "";
         public bool IsGenSingleLineJSON = false;
         public bool IsSeparatedJSON = false;
         public bool IsGenJSON = false;
+        public bool IsSkipZeroValue = true;
     }
 }
 #endif

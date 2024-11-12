@@ -1106,9 +1106,16 @@ namespace STGAME.STExcelToClass
                                     {
                                         if (!typesDictionrariesLevel2[typesNames[i]].ContainsKey(LINE[k])) typesDictionrariesLevel2[typesNames[i]].Add(LINE[k], enumInt);
                                     }
-                                    if (typesDictionrariesLevel2[typesNames[i]].ContainsKey(LINE[k]))
-                                        s.Append(typesDictionrariesLevel2[typesNames[i]][LINE[k]] + ",");
-                                    else s.Append(typesDictionraries[typesNames[i]].IndexOf(LINE[k]) + ",");
+                                    if (parameters.IsGenStringEnumValue)
+                                    {
+                                        s.Append("\"" + LINE[k] + "\",");
+                                    }
+                                    else
+                                    {
+                                        if (typesDictionrariesLevel2[typesNames[i]].ContainsKey(LINE[k]))
+                                            s.Append(typesDictionrariesLevel2[typesNames[i]][LINE[k]] + ",");
+                                        else s.Append(typesDictionraries[typesNames[i]].IndexOf(LINE[k]) + ",");
+                                    }
 
                                     break;
                             }
@@ -1173,9 +1180,18 @@ namespace STGAME.STExcelToClass
                                 {
                                     if (!typesDictionrariesLevel2[typesNames[i]].ContainsKey(LINE[i])) typesDictionrariesLevel2[typesNames[i]].Add(LINE[i], enumInt);
                                 }
-                                if (typesDictionrariesLevel2[typesNames[i]].ContainsKey(LINE[i]))
-                                    s.Append("\"" + names[i] + "\":" + typesDictionrariesLevel2[typesNames[i]][LINE[i]] + ",\n");
-                                else s.Append("\"" + names[i] + "\":" + typesDictionraries[typesNames[i]].IndexOf(LINE[i]) + ",\n");
+
+                                if (parameters.IsGenStringEnumValue)
+                                {
+                                    s.Append("\"" + names[i] + "\":\"" + LINE[i] + "\",\n");
+                                }
+                                else
+                                {
+                                    if (typesDictionrariesLevel2[typesNames[i]].ContainsKey(LINE[i]))
+                                        s.Append("\"" + names[i] + "\":" + typesDictionrariesLevel2[typesNames[i]][LINE[i]] + ",\n");
+                                    else s.Append("\"" + names[i] + "\":" + typesDictionraries[typesNames[i]].IndexOf(LINE[i]) + ",\n");
+                                }
+
                                 break;
                         }
                     }
@@ -1405,6 +1421,7 @@ namespace STGAME.STExcelToClass
         public bool IsSeparatedJSON = false;
         public bool IsGenJSON = false;
         public bool IsSkipZeroValue = true;
+        public bool IsGenStringEnumValue = true;
     }
 }
 #endif

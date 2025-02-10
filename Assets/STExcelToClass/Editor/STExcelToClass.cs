@@ -297,7 +297,9 @@ namespace STGAME.STExcelToClass
                     string[] substrings = LINE[i].Split(':');
                     string presetType = substrings[1];
                     if (presetType.Equals("int") || presetType.Equals("Int") || presetType.Equals("I") || presetType.Equals("i")) types[i] = TYPE.INT;
+                    else if (presetType.Equals("long") || presetType.Equals("Long") || presetType.Equals("L") ) types[i] = TYPE.LONG;
                     else if (presetType.Equals("float") || presetType.Equals("Float") || presetType.Equals("F") || presetType.Equals("f")) types[i] = TYPE.FLOAT;
+                    else if (presetType.Equals("double") || presetType.Equals("Double") || presetType.Equals("D") ) types[i] = TYPE.DOUBLE;
                     else if (presetType.Equals("bool") || presetType.Equals("Bool") || presetType.Equals("Boolean") || presetType.Equals("B") || presetType.Equals("b")) types[i] = TYPE.BOOL;
                     else if (presetType.Equals("string") || presetType.Equals("String") || presetType.Equals("S") || presetType.Equals("s")) types[i] = TYPE.STRING;
                     else
@@ -428,35 +430,10 @@ namespace STGAME.STExcelToClass
         public void LoadFirstData()
         {
             LINE = lines[iStar + 1].Split('\t');
-            //types = new TYPE[n]; for (int i = 0; i < n; i++) types[i] = TYPE.NOT_DECICED_YET;
-
-            //typesNames = new string[n];
 
             if (typesDictionraries == null) typesDictionraries = new Dictionary<string, List<string>>();
             if (typesDictionrariesLevel2 == null) typesDictionrariesLevel2 = new Dictionary<string, Dictionary<string, string>>();
 
-            //for (int i = 0; i < n; i++)
-            //{
-            //    Debug.Log("LINE= "+LINE[i]);
-
-            //    if (LINE[i].Split(':').Length>2)
-            //    {
-
-            //        string[] substrings = LINE[i].Split(':');
-            //        string presetType = substrings[1];
-            //        if (presetType.Equals("int") || presetType.Equals("Int")) types[i] = TYPE.INT;
-            //        else if (presetType.Equals("float") || presetType.Equals("Float")) types[i] = TYPE.FLOAT;
-            //        else if (presetType.Equals("bool") || presetType.Equals("Bool") || presetType.Equals("Boolean")) types[i] = TYPE.BOOL;
-            //        else if (presetType.Equals("string") || presetType.Equals("String")) types[i] = TYPE.STRING;
-            //        else
-            //        {
-            //            types[i] = TYPE.ENUM;
-            //            typesNames[i] = ExtractEnumNameAndProperties(presetType, true);
-            //        }
-            //        LINE[i] = substrings[0];
-            //        names[i] = substrings[0];
-            //    }
-            //}
 
             for (int i = 0; i < n; i++)
             {
@@ -498,12 +475,11 @@ namespace STGAME.STExcelToClass
                     case TYPE.FLOAT: typesNames[i] = "float"; break;
                     case TYPE.STRING: typesNames[i] = "string"; break;
                     case TYPE.BOOL: typesNames[i] = "bool"; break;
+                    case TYPE.LONG: typesNames[i] = "long"; break;
+                    case TYPE.DOUBLE: typesNames[i] = "double"; break;
+                        
                 }
             }
-
-            //if (parameters.SkipGenEnums != null)
-            //foreach (var v in parameters.SkipGenEnums) if (!typesSkipedForGenerate.Contains(v)) typesSkipedForGenerate.Add(v);
-
         }
         public string Gen_st_hero(string classname)
         {
@@ -690,21 +666,25 @@ namespace STGAME.STExcelToClass
                                 switch (types[i])
                                 {
                                     case TYPE.FLOAT:
-
-
                                         if (LINE[k] == null || LINE[k].Length == 0)
-                                        {
-                                            //if(!parameters.IsSkipZeroValue)
                                             s += "0f,";
-                                        }
                                         else
                                         {
                                             LINE[k] = LINE[k].Replace(",", "f,");
                                             s += LINE[k] + "f,";
                                         }
-
+                                        break;
+                                    case TYPE.DOUBLE:
+                                        if (LINE[k] == null || LINE[k].Length == 0)
+                                            s += "0,";
+                                        else
+                                        {
+                                            LINE[k] = LINE[k].Replace(",", ",");
+                                            s += LINE[k] + ",";
+                                        }
                                         break;
                                     case TYPE.INT:
+                                    case TYPE.LONG:
                                         if (LINE[k] == null || LINE[k].Length == 0)
                                             s += "0" + ",";
                                         else
@@ -788,6 +768,7 @@ namespace STGAME.STExcelToClass
                             switch (types[i])
                             {
                                 case TYPE.FLOAT:
+                                
                                     if (LINE[i] == null || LINE[i].Length == 0 || LINE[i].Equals("0") || LINE[i].Equals("0.0"))
                                     {
                                         if (!parameters.IsSkipZeroValue)
@@ -796,7 +777,17 @@ namespace STGAME.STExcelToClass
                                     else
                                         s += "t." + names[i] + "=" + LINE[i] + "f;\n";
                                     break;
+                                case TYPE.DOUBLE:
+                                    if (LINE[i] == null || LINE[i].Length == 0 || LINE[i].Equals("0") || LINE[i].Equals("0.0"))
+                                    {
+                                        if (!parameters.IsSkipZeroValue)
+                                            s += "t." + names[i] + "=" + 0 + ";\n";
+                                    }
+                                    else
+                                        s += "t." + names[i] + "=" + LINE[i] + ";\n";
+                                    break;
                                 case TYPE.INT:
+                                case TYPE.LONG:
                                     if (LINE[i] == null || LINE[i].Length == 0 || LINE[i].Equals("0"))
                                     {
                                         if (!parameters.IsSkipZeroValue)
@@ -994,6 +985,8 @@ namespace STGAME.STExcelToClass
         {
             switch (type)
             {
+                case TYPE.LONG: return "long";
+                case TYPE.DOUBLE: return "double";  
                 case TYPE.FLOAT:
                     return "float";
                 case TYPE.INT:
@@ -1009,7 +1002,7 @@ namespace STGAME.STExcelToClass
 
         string getStringValueByType(TYPE type, string value)
         {
-            if (type == TYPE.FLOAT || type == TYPE.INT)
+            if (type == TYPE.FLOAT || type == TYPE.INT || type == TYPE.LONG || type == TYPE.DOUBLE)
             {
                 return value;
             }
@@ -1018,8 +1011,11 @@ namespace STGAME.STExcelToClass
 
         string getStringToJSONAsType(TYPE type)
         {
+            
             if (type == TYPE.INT) return ".AsInt";
             else if (type == TYPE.FLOAT) return ".AsFloat";
+            else if (type == TYPE.LONG) return ".AsLong";
+            else if (type == TYPE.DOUBLE) return ".AsDouble";
             else return "";
         }
 
@@ -1066,12 +1062,14 @@ namespace STGAME.STExcelToClass
                             switch (types[i])
                             {
                                 case TYPE.FLOAT:
+                                case TYPE.DOUBLE:
                                     if (LINE[k] == null || LINE[k].Length == 0)
                                         s.Append("0" + ",");
                                     else
                                         s.Append(LINE[k] + ",");
                                     break;
                                 case TYPE.INT:
+                                case TYPE.LONG:
                                     if (LINE[k] == null || LINE[k].Length == 0)
                                         s.Append("0" + ",");
                                     else
@@ -1306,10 +1304,7 @@ namespace STGAME.STExcelToClass
             File.WriteAllText(Path.Combine(Application.dataPath, dr), s.ToString());
         }
 
-        private void Form1_Load(object sender, EventArgs e)
-        {
-
-        }
+        
 
 
         private static class MessageBox
@@ -1402,6 +1397,8 @@ namespace STGAME.STExcelToClass
         STRING = 2,
         BOOL = 3,
         ENUM = 4,
+        LONG=5,
+        DOUBLE=6,
         NOT_DECICED_YET = 10
     }
 
